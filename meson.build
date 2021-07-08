@@ -12,4 +12,4 @@ dependencies = [
 ]
 
 
-executable('kmercounter', sources, dependencies: dependencies)
+executable('nfv', sources, dependencies: dependencies)
