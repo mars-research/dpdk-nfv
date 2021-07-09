@@ -8,7 +8,9 @@ extern "C" void nf1_decrement_ttl(rte_mbuf *m) {
   rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
 
   // Get IPv4 heaver.
-  assert(eth_hdr->ether_type == rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4));
+  if(eth_hdr->ether_type != rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4)) {
+    return;
+  }
   struct rte_ipv4_hdr *ipv4_hdr =
       (struct rte_ipv4_hdr *)((uint8_t *)eth_hdr +
                               sizeof(struct rte_ether_hdr));

@@ -73,13 +73,17 @@ extern "C" void nf2_one_way_nat(rte_mbuf *m) {
   rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
 
   // Get IPv4 header.
-  assert(eth_hdr->ether_type == rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4));
+  if (eth_hdr->ether_type != rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4)) {
+    return;
+  }
   struct rte_ipv4_hdr *ipv4_hdr =
       (struct rte_ipv4_hdr *)((uint8_t *)eth_hdr +
                               sizeof(struct rte_ether_hdr));
 
   // Get UDP header.
-  assert(ipv4_hdr->next_proto_id == IPPROTO_UDP);
+  if (ipv4_hdr->next_proto_id != IPPROTO_UDP) {
+    return;
+  }
   size_t ip_hdr_offset =
       (ipv4_hdr->version_ihl & RTE_IPV4_HDR_IHL_MASK) * RTE_IPV4_IHL_MULTIPLIER;
   rte_udp_hdr *udp_hdr =
