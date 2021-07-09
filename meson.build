@@ -1,5 +1,5 @@
 project('dpdk-nfv', ['c', 'cpp'], default_options: ['buildtype=release', 'cpp_std=c++20'],)
-add_global_arguments(['-Wall', '-Wextra', '-pedantic'], language : ['c', 'cpp'])
+add_project_arguments(['-Wall', '-Wextra'], language : ['c', 'cpp'])
 
 sources = []
 subdir('src')
