@@ -15,19 +15,20 @@ struct Flow {
   rte_be16_t dst_port;
   rte_be16_t proto;
 
+  Flow() : src_ip(0), dst_ip(0), src_port(0), dst_port(0), proto(0) {}
+
   Flow(rte_be32_t src_ip, rte_be32_t dst_ip, rte_be16_t src_port,
        rte_be16_t dst_port, rte_be16_t proto)
-      : src_ip(src_ip),
-        dst_ip(dst_ip),
-        src_port(src_port),
-        dst_port(dst_port),
+      : src_ip(src_ip), dst_ip(dst_ip), src_port(src_port), dst_port(dst_port),
         proto(proto) {}
 
   Flow reverse_flow() const {
-    return Flow(this->dst_ip, this->src_ip, this->dst_port, this->src_port, this->proto);
+    return Flow(this->dst_ip, this->src_ip, this->dst_port, this->src_port,
+                this->proto);
   }
 
-  // Update the packet with the NATed flow's IP and port and update the checksum.
+  // Update the packet with the NATed flow's IP and port and update the
+  // checksum.
   void ipv4_stamp_flow(rte_ipv4_hdr *ipv4_hdr, rte_udp_hdr *udp_hdr) const {
     // Update the packet with the NATed flow's IP and port.
     ipv4_hdr->src_addr = this->src_ip;
@@ -49,8 +50,7 @@ bool operator==(const Flow &lhs, const Flow &rhs) {
          lhs.proto == rhs.proto;
 }
 
-template <typename H>
-H AbslHashValue(H h, const Flow &f) {
+template <typename H> H AbslHashValue(H h, const Flow &f) {
   return H::combine(std::move(h), f.src_ip, f.dst_ip, f.src_port, f.dst_port,
                     f.proto);
 }
@@ -59,6 +59,8 @@ struct FlowUsed {
   Flow flow;
   uint64_t time;
   bool used;
+
+  FlowUsed() : flow(Flow()), time(0), used(false) {}
 
   FlowUsed(Flow flow, uint64_t time, bool used)
       : flow(flow), time(time), used(used) {}
@@ -70,22 +72,19 @@ bool operator==(const FlowUsed &lhs, const FlowUsed &rhs) {
   return lhs.flow == rhs.flow && lhs.time == rhs.time && lhs.used == rhs.used;
 }
 
-template <typename H>
-H AbslHashValue(H h, const FlowUsed &f) {
+template <typename H> H AbslHashValue(H h, const FlowUsed &f) {
   return H::combine(std::move(h), f.flow, f.time, f.used);
 }
 
 // TODO: use FNV?
+static size_t MAX_SIZE = 1 << 16;
 static absl::flat_hash_map<Flow, Flow, absl::Hash<Flow>> PORT_HASH;
-static std::vector<FlowUsed> FLOW_VEC;
+static std::vector<FlowUsed> FLOW_VEC(MAX_SIZE);
 const uint16_t MIN_PORT = 1024;
 const uint16_t MAX_PORT = 65535;
 static uint16_t NEXT_PORT = MIN_PORT;
 
-extern "C" void nf2_init() {
-  PORT_HASH.reserve(1 << 16);
-  FLOW_VEC.reserve(1 << 16);
-}
+extern "C" void nf2_init() { PORT_HASH.reserve(1 << 16); }
 
 extern "C" void nf2_one_way_nat(rte_mbuf *m) {
   // Get ethernet header.
@@ -122,7 +121,7 @@ extern "C" void nf2_one_way_nat(rte_mbuf *m) {
     // Allocate a new port.
     const auto assigned_port = NEXT_PORT;
     NEXT_PORT++;
-    
+
     FLOW_VEC[assigned_port].flow = flow;
     FLOW_VEC[assigned_port].used = true;
 
