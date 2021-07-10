@@ -23,6 +23,23 @@ struct Flow {
         dst_port(dst_port),
         proto(proto) {}
 
+  Flow reverse_flow() const {
+    return Flow(this->dst_ip, this->src_ip, this->dst_port, this->src_port, this->proto);
+  }
+
+  // Update the packet with the NATed flow's IP and port and update the checksum.
+  void ipv4_stamp_flow(rte_ipv4_hdr *ipv4_hdr, rte_udp_hdr *udp_hdr) const {
+    // Update the packet with the NATed flow's IP and port.
+    ipv4_hdr->src_addr = this->src_ip;
+    ipv4_hdr->dst_addr = this->dst_ip;
+    udp_hdr->src_port = this->src_port;
+    udp_hdr->dst_port = this->dst_port;
+
+    // Update IPv4 and l4 checksum.
+    // Note that our Rust implementation doesn't do that.
+    rte_ipv4_udptcp_cksum(ipv4_hdr, udp_hdr);
+  }
+
   friend bool operator==(const Flow &lhs, const Flow &rhs);
 };
 
@@ -61,7 +78,9 @@ H AbslHashValue(H h, const FlowUsed &f) {
 // TODO: use FNV?
 static absl::flat_hash_map<Flow, Flow, absl::Hash<Flow>> PORT_HASH;
 static std::vector<FlowUsed> FLOW_VEC;
-static uint16_t NEXT_PORT = 1024;
+const uint16_t MIN_PORT = 1024;
+const uint16_t MAX_PORT = 65535;
+static uint16_t NEXT_PORT = MIN_PORT;
 
 extern "C" void nf2_init() {
   PORT_HASH.reserve(1 << 16);
@@ -96,17 +115,26 @@ extern "C" void nf2_one_way_nat(rte_mbuf *m) {
   // Check if the flow is already NATed.
   const auto iter = PORT_HASH.find(flow);
   if (iter != PORT_HASH.end()) {
-    const Flow &nated_flow = iter->second;
-    // Update the packet with the NATed flow's IP.
-    ipv4_hdr->src_addr = nated_flow.src_ip;
-    ipv4_hdr->dst_addr = nated_flow.dst_ip;
-    udp_hdr->src_port = nated_flow.src_port;
-    udp_hdr->dst_port = nated_flow.dst_port;
+    // Stamp the pack with the outgoing flow.
+    const Flow &outgoing_flow = iter->second;
+    outgoing_flow.ipv4_stamp_flow(ipv4_hdr, udp_hdr);
+  } else if (NEXT_PORT < MAX_PORT) {
+    // Allocate a new port.
+    const auto assigned_port = NEXT_PORT;
+    NEXT_PORT++;
+    
+    FLOW_VEC[assigned_port].flow = flow;
+    FLOW_VEC[assigned_port].used = true;
 
-    // Update IPv4 and l4 checksum.
-    // Note that our Rust implementation doesn't do that.
-    rte_ipv4_udptcp_cksum(ipv4_hdr, udp_hdr);
-  } else {
-    // TODO: create a new NATed flow.
+    // Create a new outgoing flow.
+    Flow outgoing_flow = flow;
+    outgoing_flow.src_port = assigned_port;
+
+    // Update flow mapping.
+    PORT_HASH.try_emplace(flow, outgoing_flow);
+    PORT_HASH.try_emplace(outgoing_flow.reverse_flow(), flow.reverse_flow());
+
+    // Stamp the pack with the outgoing flow.
+    outgoing_flow.ipv4_stamp_flow(ipv4_hdr, udp_hdr);
   }
 }
