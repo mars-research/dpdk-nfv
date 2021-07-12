@@ -11,5 +11,11 @@ dependencies = [
     dependency('boost'),
 ]
 
+libsashstore = subproject('libsashstore')
 
-executable('nfv', sources, dependencies: dependencies)
+executable('nfv',
+    sources,
+    dependencies: dependencies,
+    include_directories: libsashstore.get_variable('libsashstore_inc'),
+    link_with: libsashstore.get_variable('libsashstore'),
+)
