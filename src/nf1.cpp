@@ -17,7 +17,4 @@ extern "C" void nf1_decrement_ttl(rte_mbuf *m) {
 
   // Decrement TLL
   ipv4_hdr->time_to_live--;
-
-  // Calls nf2
-  nf2_one_way_nat(m);
 }

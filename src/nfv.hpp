@@ -16,7 +16,7 @@ void nf2_one_way_nat(struct rte_mbuf *m);
 
 // NF3: ACL.
 void nf3_init();
-void nf2_one_way_nat(struct rte_mbuf *m);
+void nf3_acl(struct rte_mbuf *m);
 
 #ifdef __cplusplus  
 }

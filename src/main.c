@@ -184,6 +184,7 @@ static void l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid) {
 
   // TODO: nfv here
   nf1_decrement_ttl(m);
+  nf2_one_way_nat(m);
 
   buffer = tx_buffer[dst_port];
   sent = rte_eth_tx_buffer(dst_port, 0, buffer, m);
@@ -213,6 +214,10 @@ static void l2fwd_main_loop(void) {
     RTE_LOG(INFO, L2FWD, "lcore %u has nothing to do\n", lcore_id);
     return;
   }
+
+  RTE_LOG(INFO, L2FWD, "initializing network functions on lcore %u\n", lcore_id);
+  nf2_init();
+  nf3_init();
 
   RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
 
