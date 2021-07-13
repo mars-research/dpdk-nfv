@@ -1,19 +1,21 @@
+#include <tuple>
+
 #include <rte_ether.h>
 #include <rte_ip.h>
 
 #include "nfv.hpp"
+#include "packettool.hpp"
+
+std::tuple<int, bool> f() { return {0, false}; }
 
 extern "C" void nf1_decrement_ttl(rte_mbuf *m) {
-  // Get ethernet header.
-  rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
-
-  // Get IPv4 heaver.
-  if(eth_hdr->ether_type != rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4)) {
+  // Get packet header.
+  const auto headers = get_packet_headers(m);
+  if (!(headers)) {
     return;
   }
-  struct rte_ipv4_hdr *ipv4_hdr =
-      (struct rte_ipv4_hdr *)((uint8_t *)eth_hdr +
-                              sizeof(struct rte_ether_hdr));
+  rte_ipv4_hdr *ipv4_hdr;
+  std::tie(std::ignore, ipv4_hdr, std::ignore) = headers.value();
 
   // Decrement TLL
   ipv4_hdr->time_to_live--;

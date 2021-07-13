@@ -20,29 +20,15 @@ static uint16_t NEXT_PORT = MIN_PORT;
 extern "C" void nf2_init() { PORT_HASH.reserve(1 << 16); }
 
 extern "C" void nf2_one_way_nat(rte_mbuf *m) {
-  // Get ethernet header.
-  rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
-
-  // Get IPv4 header.
-  if (eth_hdr->ether_type != rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4)) {
+  // Get packet header.
+  const auto headers = get_packet_headers(m);
+  if (!(headers)) {
     return;
   }
-  struct rte_ipv4_hdr *ipv4_hdr =
-      (struct rte_ipv4_hdr *)((uint8_t *)eth_hdr +
-                              sizeof(struct rte_ether_hdr));
-
-  // Get UDP header.
-  if (ipv4_hdr->next_proto_id != IPPROTO_UDP) {
-    return;
-  }
-  size_t ip_hdr_offset =
-      (ipv4_hdr->version_ihl & RTE_IPV4_HDR_IHL_MASK) * RTE_IPV4_IHL_MULTIPLIER;
-  rte_udp_hdr *udp_hdr =
-      (struct rte_udp_hdr *)((uint8_t *)ipv4_hdr + ip_hdr_offset);
+  auto [eth_hdr, ipv4_hdr, udp_hdr] = headers.value();
 
   // Extract flow.
-  const Flow flow(ipv4_hdr->src_addr, ipv4_hdr->dst_addr, udp_hdr->src_port,
-                  udp_hdr->dst_port, eth_hdr->ether_type);
+  const Flow flow(eth_hdr, ipv4_hdr, udp_hdr);
 
   // Check if the flow is already NATed.
   const auto iter = PORT_HASH.find(flow);

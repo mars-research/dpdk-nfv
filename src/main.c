@@ -215,7 +215,8 @@ static void l2fwd_main_loop(void) {
     return;
   }
 
-  RTE_LOG(INFO, L2FWD, "initializing network functions on lcore %u\n", lcore_id);
+  RTE_LOG(INFO, L2FWD, "initializing network functions on lcore %u\n",
+          lcore_id);
   nf2_init();
   nf3_init();
 

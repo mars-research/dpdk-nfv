@@ -18,6 +18,6 @@ void nf2_one_way_nat(struct rte_mbuf *m);
 void nf3_init();
 void nf3_acl(struct rte_mbuf *m);
 
-#ifdef __cplusplus  
+#ifdef __cplusplus
 }
 #endif
