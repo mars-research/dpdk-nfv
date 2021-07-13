@@ -185,6 +185,7 @@ static void l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid) {
   nf1_decrement_ttl(m);
   nf2_one_way_nat(m);
   nf3_acl(m);
+  nf4_maglev(m);
 
   buffer = tx_buffer[dst_port];
   sent = rte_eth_tx_buffer(dst_port, 0, buffer, m);
@@ -219,6 +220,7 @@ static void l2fwd_main_loop(void) {
           lcore_id);
   nf2_init();
   nf3_init();
+  nf4_init();
 
   RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
 

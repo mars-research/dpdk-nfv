@@ -54,3 +54,12 @@ get_packet_headers(rte_mbuf *m) {
 
   return {{eth_hdr, ipv4_hdr, udp_hdr}};
 }
+
+void swap_mac(rte_mbuf *m) {
+  rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
+  swap_mac(eth_hdr);
+}
+
+void swap_mac(rte_ether_hdr *eth_hdr) {
+  std::swap(eth_hdr->s_addr, eth_hdr->d_addr);
+}

@@ -4,4 +4,5 @@ sources = files(
     'nf1.cpp',
     'nf2.cpp',
     'nf3.cpp',
+    'nf4.cpp',
 )
