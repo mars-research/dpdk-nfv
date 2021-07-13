@@ -182,9 +182,9 @@ static void l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid) {
   // if (mac_updating)
   // 	l2fwd_mac_updating(m, dst_port);
 
-  // TODO: nfv here
   nf1_decrement_ttl(m);
   nf2_one_way_nat(m);
+  nf3_acl(m);
 
   buffer = tx_buffer[dst_port];
   sent = rte_eth_tx_buffer(dst_port, 0, buffer, m);
