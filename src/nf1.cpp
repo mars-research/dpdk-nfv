@@ -8,7 +8,7 @@
 
 std::tuple<int, bool> f() { return {0, false}; }
 
-extern "C" void nf1_decrement_ttl(rte_mbuf *m) {
+extern "C" void _nf1_decrement_ttl(rte_mbuf *m) {
   // Get packet header.
   const auto headers = get_packet_headers(m);
   if (!(headers)) {

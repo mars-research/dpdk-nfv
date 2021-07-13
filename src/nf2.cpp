@@ -19,7 +19,7 @@ static uint16_t NEXT_PORT = MIN_PORT;
 
 extern "C" void nf2_init() { PORT_HASH.reserve(1 << 16); }
 
-extern "C" void nf2_one_way_nat(rte_mbuf *m) {
+extern "C" void _nf2_one_way_nat(rte_mbuf *m) {
   // Get packet header.
   const auto headers = get_packet_headers(m);
   if (!(headers)) {

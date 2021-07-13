@@ -54,7 +54,7 @@ static std::vector<Acl> ACLS = {Acl{
   drop : false,
 }};
 
-extern "C" void nf3_acl(rte_mbuf *m) {
+extern "C" void _nf3_acl(rte_mbuf *m) {
   // Get packet header.
   const auto headers = get_packet_headers(m);
   if (!(headers)) {

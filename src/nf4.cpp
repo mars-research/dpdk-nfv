@@ -14,10 +14,9 @@ extern "C" {
 
 extern "C" void nf4_init() { maglev_init(); }
 
-extern "C" void nf4_maglev(rte_mbuf *m) {
+extern "C" void _nf4_maglev(rte_mbuf *m) {
   if (maglev_process_frame(rte_pktmbuf_mtod(m, void *),
                            rte_pktmbuf_pkt_len(m)) != 1) {
-    // Get packet header.
     swap_mac(m);
   }
 }

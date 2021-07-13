@@ -1,0 +1,1 @@
+option('trampoline', type : 'combo', choices : ['no-fxsave', 'fxsave', 'no-trampoline'], value : 'fxsave')
