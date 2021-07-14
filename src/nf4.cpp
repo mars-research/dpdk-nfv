@@ -1,3 +1,5 @@
+#include "nf4.hpp"
+
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
 #include <rte_ether.h>
@@ -12,9 +14,9 @@ extern "C" {
 #include "nfv.hpp"
 #include "packettool.hpp"
 
-extern "C" void nf4_init() { maglev_init(); }
+NF4Maglev::NF4Maglev() { maglev_init(); }
 
-extern "C" void _nf4_maglev(rte_mbuf *m) {
+void NF4Maglev::_process_frame(rte_mbuf *m) {
   if (maglev_process_frame(rte_pktmbuf_mtod(m, void *),
                            rte_pktmbuf_pkt_len(m)) != 1) {
     swap_mac(m);

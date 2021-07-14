@@ -5,6 +5,8 @@
 // Borrowed from
 // https://github.com/DPDK/dpdk/blob/10aa375704c148d9e90b5e984066d719f7465357/examples/l2fwd/main.c
 
+#include <vector>
+#include <memory>
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
@@ -42,6 +44,10 @@
 #include <sys/types.h>
 
 #include "nfv.hpp"
+#include "nf1.hpp"
+#include "nf2.hpp"
+#include "nf3.hpp"
+#include "nf4.hpp"
 
 static volatile bool force_quit;
 
@@ -149,24 +155,6 @@ static void print_stats(void) {
   fflush(stdout);
 }
 
-static void l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid) {
-  unsigned dst_port;
-  int sent;
-  struct rte_eth_dev_tx_buffer *buffer;
-
-  dst_port = l2fwd_dst_ports[portid];
-
-  nf1_decrement_ttl(m);
-  nf2_one_way_nat(m);
-  nf3_acl(m);
-  nf4_maglev(m);
-
-  buffer = tx_buffer[dst_port];
-  sent = rte_eth_tx_buffer(dst_port, 0, buffer, m);
-  if (sent)
-    port_statistics[dst_port].tx += sent;
-}
-
 /* main processing loop */
 static void l2fwd_main_loop(void) {
   struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
@@ -174,7 +162,7 @@ static void l2fwd_main_loop(void) {
   int sent;
   unsigned lcore_id;
   uint64_t prev_tsc, diff_tsc, cur_tsc, timer_tsc;
-  unsigned i, j, portid, nb_rx;
+  unsigned i, j, portid, nb_rx, nb_tx;
   struct lcore_queue_conf *qconf;
   const uint64_t drain_tsc =
       (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S * BURST_TX_DRAIN_US;
@@ -193,9 +181,18 @@ static void l2fwd_main_loop(void) {
 
   RTE_LOG(INFO, L2FWD, "initializing network functions on lcore %u\n",
           lcore_id);
-  nf2_init();
-  nf3_init();
-  nf4_init();
+  std::vector<std::unique_ptr<NetworkFunction>> nfs;
+  nfs.emplace_back(std::make_unique<NF1DecrementTtl>());
+  nfs.emplace_back(std::make_unique<NF2OneWayNat>());
+  nfs.emplace_back(std::make_unique<NF3Acl>(std::vector{Acl{
+    src_ip : 0,
+    dst_ip : {},
+    src_port : {},
+    dst_port : {},
+    established : {},
+    drop : false,
+  }}));
+  nfs.emplace_back(std::make_unique<NF4Maglev>());
 
   RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
 
@@ -252,7 +249,14 @@ static void l2fwd_main_loop(void) {
       for (j = 0; j < nb_rx; j++) {
         m = pkts_burst[j];
         rte_prefetch0(rte_pktmbuf_mtod(m, void *));
-        l2fwd_simple_forward(m, portid);
+
+        for (auto&& nf : nfs) {
+          nf->process_frame(m);
+        }
+
+        uint16_t sent = rte_eth_tx_buffer(portid, 0, buffer, m);
+        if (sent)
+          port_statistics[portid].tx += sent;
       }
     }
   }
