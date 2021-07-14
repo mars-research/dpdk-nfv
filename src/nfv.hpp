@@ -1,4 +1,18 @@
+#pragma once
+
+
 #include <rte_mbuf.h>
+
+class NetworkFunction {
+private:
+    virtual void _process_frame(rte_mbuf *m) = 0;
+public:
+    virtual void process_frame(rte_mbuf *m) = 0;
+    virtual ~NetworkFunction() {}
+};
+
+
+
 
 #ifdef __cplusplus
 extern "C" {

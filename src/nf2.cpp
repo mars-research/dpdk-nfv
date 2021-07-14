@@ -1,3 +1,5 @@
+#include "nf2.hpp"
+
 #include <absl/container/flat_hash_map.h>
 #include <absl/hash/hash.h>
 #include <rte_ether.h>
@@ -9,17 +11,9 @@
 #include "nfv.hpp"
 #include "packettool.hpp"
 
-// TODO: use FNV?
-static size_t MAX_SIZE = 1 << 16;
-static absl::flat_hash_map<Flow, Flow, absl::Hash<Flow>> PORT_HASH;
-static std::vector<FlowUsed> FLOW_VEC(MAX_SIZE);
-const uint16_t MIN_PORT = 1024;
-const uint16_t MAX_PORT = 65535;
-static uint16_t NEXT_PORT = MIN_PORT;
+NF2OneWayNat::NF2OneWayNat(): port_hash_(MAX_SIZE), flow_vec_(MAX_SIZE) {}
 
-extern "C" void nf2_init() { PORT_HASH.reserve(1 << 16); }
-
-extern "C" void _nf2_one_way_nat(rte_mbuf *m) {
+void NF2OneWayNat::_process_frame(rte_mbuf *m) {
   // Get packet header.
   const auto headers = get_packet_headers(m);
   if (!(headers)) {
@@ -31,26 +25,26 @@ extern "C" void _nf2_one_way_nat(rte_mbuf *m) {
   const Flow flow(eth_hdr, ipv4_hdr, udp_hdr);
 
   // Check if the flow is already NATed.
-  const auto iter = PORT_HASH.find(flow);
-  if (iter != PORT_HASH.end()) {
+  const auto iter = this->port_hash_.find(flow);
+  if (iter != this->port_hash_.end()) {
     // Stamp the pack with the outgoing flow.
     const Flow &outgoing_flow = iter->second;
     outgoing_flow.ipv4_stamp_flow(ipv4_hdr, udp_hdr);
-  } else if (NEXT_PORT < MAX_PORT) {
+  } else if (this->next_port_ < MAX_PORT) {
     // Allocate a new port.
-    const auto assigned_port = NEXT_PORT;
-    NEXT_PORT++;
+    const auto assigned_port = this->next_port_;
+    this->next_port_++;
 
-    FLOW_VEC[assigned_port].flow = flow;
-    FLOW_VEC[assigned_port].used = true;
+    this->flow_vec_[assigned_port].flow = flow;
+    this->flow_vec_[assigned_port].used = true;
 
     // Create a new outgoing flow.
     Flow outgoing_flow = flow;
     outgoing_flow.src_port = assigned_port;
 
     // Update flow mapping.
-    PORT_HASH.try_emplace(flow, outgoing_flow);
-    PORT_HASH.try_emplace(outgoing_flow.reverse_flow(), flow.reverse_flow());
+    this->port_hash_.try_emplace(flow, outgoing_flow);
+    this->port_hash_.try_emplace(outgoing_flow.reverse_flow(), flow.reverse_flow());
 
     // Stamp the pack with the outgoing flow.
     outgoing_flow.ipv4_stamp_flow(ipv4_hdr, udp_hdr);

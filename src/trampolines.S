@@ -4,3 +4,5 @@ make_trampoline nf1_decrement_ttl
 make_trampoline nf2_one_way_nat
 make_trampoline nf3_acl
 make_trampoline nf4_maglev
+
+make_trampoline_with _ZN15NF1DecrementTtl13process_frameEP8rte_mbuf, _ZN15NF1DecrementTtl14_process_frameEP8rte_mbuf

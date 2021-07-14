@@ -1,3 +1,5 @@
+#include "nf1.hpp"
+
 #include <tuple>
 
 #include <rte_ether.h>
@@ -6,9 +8,7 @@
 #include "nfv.hpp"
 #include "packettool.hpp"
 
-std::tuple<int, bool> f() { return {0, false}; }
-
-extern "C" void _nf1_decrement_ttl(rte_mbuf *m) {
+void NF1DecrementTtl::_process_frame(rte_mbuf *m) {
   // Get packet header.
   const auto headers = get_packet_headers(m);
   if (!(headers)) {
