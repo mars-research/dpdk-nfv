@@ -253,11 +253,10 @@ static void l2fwd_main_loop(void) {
         for (auto&& nf : nfs) {
           nf->process_frame(m);
         }
-
-        uint16_t sent = rte_eth_tx_buffer(portid, 0, buffer, m);
-        if (sent)
-          port_statistics[portid].tx += sent;
       }
+
+      nb_tx = rte_eth_tx_burst(portid, 0, pkts_burst, nb_rx);
+      assert(nb_tx == nb_rx);
     }
   }
 }
