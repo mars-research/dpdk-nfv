@@ -1,7 +1,17 @@
-project('dpdk-nfv', ['c', 'cpp'], default_options: ['buildtype=release', 'cpp_std=c++17'],)
-add_project_arguments(['-Wall', '-Wextra'], language : ['c', 'cpp'])
+project('dpdk-nfv', ['c', 'cpp'], default_options: [
+    'buildtype=release',
+    'optimization=3',
+    'b_lto=true',
+    'cpp_std=c++17',
+    'warning_level=3',
+    'werror=true',
+    ],)
 
-objects = []
+ add_project_arguments('-Wno-deprecated-declarations', language: 'c')
+
+no_trampoline_objects = []
+no_fxsave_objects = []
+fxsave_objects = []
 sources = []
 subdir('src')
 
@@ -13,8 +23,20 @@ dependencies = [
 
 libsashstore = subproject('libsashstore')
 
-executable('nfv',
-    sources + objects,
+executable('nfv-notrampoline',
+    sources + no_trampoline_objects,
+    dependencies: dependencies,
+    include_directories: libsashstore.get_variable('libsashstore_inc'),
+    link_with: libsashstore.get_variable('libsashstore'),
+)
+executable('nfv-nofxsave',
+    sources + no_fxsave_objects,
+    dependencies: dependencies,
+    include_directories: libsashstore.get_variable('libsashstore_inc'),
+    link_with: libsashstore.get_variable('libsashstore'),
+)
+executable('nfv-fxsave',
+    sources + fxsave_objects,
     dependencies: dependencies,
     include_directories: libsashstore.get_variable('libsashstore_inc'),
     link_with: libsashstore.get_variable('libsashstore'),

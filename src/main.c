@@ -158,29 +158,12 @@ static void print_stats(void) {
   fflush(stdout);
 }
 
-static void l2fwd_mac_updating(struct rte_mbuf *m, unsigned dest_portid) {
-  struct rte_ether_hdr *eth;
-  void *tmp;
-
-  eth = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
-
-  /* 02:00:00:00:00:xx */
-  tmp = &eth->d_addr.addr_bytes[0];
-  *((uint64_t *)tmp) = 0x000000000002 + ((uint64_t)dest_portid << 40);
-
-  /* src addr */
-  rte_ether_addr_copy(&l2fwd_ports_eth_addr[dest_portid], &eth->s_addr);
-}
-
 static void l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid) {
   unsigned dst_port;
   int sent;
   struct rte_eth_dev_tx_buffer *buffer;
 
   dst_port = l2fwd_dst_ports[portid];
-
-  // if (mac_updating)
-  // 	l2fwd_mac_updating(m, dst_port);
 
   nf1_decrement_ttl(m);
   nf2_one_way_nat(m);
