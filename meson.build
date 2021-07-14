@@ -1,4 +1,4 @@
-project('dpdk-nfv', ['c', 'cpp'], default_options: [
+project('dpdk-nfv', ['cpp'], default_options: [
     'buildtype=release',
     'optimization=3',
     'b_lto=true',
@@ -7,7 +7,7 @@ project('dpdk-nfv', ['c', 'cpp'], default_options: [
     'werror=true',
     ],)
 
- add_project_arguments('-Wno-deprecated-declarations', language: 'c')
+ add_project_arguments('-Wno-deprecated-declarations', language: 'cpp')
 
 no_trampoline_objects = []
 no_fxsave_objects = []
