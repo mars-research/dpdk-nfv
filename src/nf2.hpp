@@ -18,10 +18,10 @@ private:
   absl::flat_hash_map<Flow, Flow, absl::Hash<Flow>> port_hash_;
   std::vector<FlowUsed> flow_vec_;
 
-  void _process_frame(rte_mbuf *m) override;
+  void _process_frames(const std::span<rte_mbuf*> packets) override;
 
 public:
   NF2OneWayNat();
 
-  void process_frame(rte_mbuf *m) override;
+  void process_frames(const std::span<rte_mbuf*> packets) override;
 };

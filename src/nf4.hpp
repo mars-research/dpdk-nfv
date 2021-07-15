@@ -6,10 +6,10 @@
 
 class NF4Maglev : public NetworkFunction {
 private:
-  void _process_frame(rte_mbuf *m) override;
+  void _process_frames(const std::span<rte_mbuf*> packets) override;
 
 public:
   NF4Maglev();
 
-  void process_frame(rte_mbuf *m) override;
+  void process_frames(const std::span<rte_mbuf*> packets) override;
 };

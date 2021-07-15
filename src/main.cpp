@@ -5,6 +5,7 @@
 // Borrowed from
 // https://github.com/DPDK/dpdk/blob/10aa375704c148d9e90b5e984066d719f7465357/examples/l2fwd/main.c
 
+#include <span>
 #include <vector>
 #include <memory>
 #include <ctype.h>
@@ -56,7 +57,6 @@ static int mac_updating = 1;
 
 #define RTE_LOGTYPE_L2FWD RTE_LOGTYPE_USER1
 
-#define MAX_PKT_BURST 32
 #define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */
 #define MEMPOOL_CACHE_SIZE 256
 
@@ -158,11 +158,10 @@ static void print_stats(void) {
 /* main processing loop */
 static void l2fwd_main_loop(void) {
   struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
-  struct rte_mbuf *m;
   int sent;
   unsigned lcore_id;
   uint64_t prev_tsc, diff_tsc, cur_tsc, timer_tsc;
-  unsigned i, j, portid, nb_rx, nb_tx;
+  unsigned i, portid, nb_rx, nb_tx;
   struct lcore_queue_conf *qconf;
   const uint64_t drain_tsc =
       (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S * BURST_TX_DRAIN_US;
@@ -241,22 +240,20 @@ static void l2fwd_main_loop(void) {
      * Read packet from RX queues
      */
     for (i = 0; i < qconf->n_rx_port; i++) {
+      // RX
       portid = qconf->rx_port_list[i];
       nb_rx = rte_eth_rx_burst(portid, 0, pkts_burst, MAX_PKT_BURST);
-
       port_statistics[portid].rx += nb_rx;
+      std::span<rte_mbuf *> packets(pkts_burst, nb_rx);
 
-      for (j = 0; j < nb_rx; j++) {
-        m = pkts_burst[j];
-        rte_prefetch0(rte_pktmbuf_mtod(m, void *));
+      // // Process
+      // for (auto && nf : nfs) {
+      //   nf->process_frames(packets);
+      // }
 
-        for (auto&& nf : nfs) {
-          nf->process_frame(m);
-        }
-      }
-
+      // TX
       nb_tx = rte_eth_tx_burst(portid, 0, pkts_burst, nb_rx);
-      assert(nb_tx == nb_rx);
+      // assert(nb_tx == nb_rx);
     }
   }
 }

@@ -38,9 +38,11 @@ bool Acl::matches(const Flow &flow,
 
 NF3Acl::NF3Acl(const std::vector<Acl> acls): flow_cache_(1 << 16), acls_(acls) {}
 
-void NF3Acl::_process_frame(rte_mbuf *m) {
+void NF3Acl::_process_frames(const std::span<rte_mbuf*> packets) {
+  for (auto&& packet : packets) {
+
   // Get packet header.
-  const auto headers = get_packet_headers(m);
+  const auto headers = get_packet_headers(packet);
   if (!(headers)) {
     return;
   }
@@ -58,4 +60,5 @@ void NF3Acl::_process_frame(rte_mbuf *m) {
     }
   }
   // return false;
+  }
 }

@@ -1,41 +1,15 @@
 #pragma once
 
+#include <span>
 
 #include <rte_mbuf.h>
 
+constexpr size_t MAX_PKT_BURST = 32;
+
 class NetworkFunction {
 private:
-    virtual void _process_frame(rte_mbuf *m) = 0;
+    virtual void _process_frames(const std::span<rte_mbuf*> packets) = 0;
 public:
-    virtual void process_frame(rte_mbuf *m) = 0;
+    virtual void process_frames(const std::span<rte_mbuf*> packets) = 0;
     virtual ~NetworkFunction() {}
 };
-
-
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// Function pointer type of a network function.
-typedef void (*nfv_fn_t)(struct rte_mbuf *m);
-
-// NF1: decrement TTL.
-void nf1_decrement_ttl(struct rte_mbuf *m);
-
-// NF2: one way NAT.
-void nf2_init();
-void nf2_one_way_nat(struct rte_mbuf *m);
-
-// NF3: ACL.
-void nf3_init();
-void nf3_acl(struct rte_mbuf *m);
-
-// NF4: Maglev load balancer.
-void nf4_init();
-void nf4_maglev(struct rte_mbuf *m);
-
-#ifdef __cplusplus
-}
-#endif

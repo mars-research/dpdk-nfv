@@ -27,10 +27,10 @@ private:
   absl::flat_hash_set<Flow> flow_cache_;
   std::vector<Acl> acls_;
 
-  void _process_frame(rte_mbuf *m) override;
+  void _process_frames(const std::span<rte_mbuf*> packets) override;
 
 public:
   NF3Acl(const std::vector<Acl> acls);
 
-  void process_frame(rte_mbuf *m) override;
+  void process_frames(const std::span<rte_mbuf*> packets) override;
 };

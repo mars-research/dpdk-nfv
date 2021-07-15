@@ -2,12 +2,14 @@ project('dpdk-nfv', ['cpp'], default_options: [
     'buildtype=release',
     'optimization=3',
     'b_lto=true',
-    'cpp_std=c++17',
+    'cpp_std=gnu++20',
     'warning_level=3',
     'werror=true',
     ],)
 
- add_project_arguments('-Wno-deprecated-declarations', language: 'cpp')
+add_project_arguments('-Wno-deprecated-declarations', language: 'cpp')
+add_project_arguments('-Wno-error=pedantic', language: 'cpp')
+add_project_arguments('-Wno-pedantic', language: 'cpp')
 
 no_trampoline_objects = []
 no_fxsave_objects = []
@@ -17,7 +19,7 @@ subdir('src')
 
 dependencies = [
     dependency('libdpdk'),
-    dependency('absl_container'),
+    dependency('absl_container', default_options: ['werror=false', 'cpp_args=-Wno-pedantic', 'warning_level=1']),
     dependency('boost'),
 ]
 
