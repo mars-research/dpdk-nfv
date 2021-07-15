@@ -30,18 +30,22 @@ bool operator==(const FlowUsed &lhs, const FlowUsed &rhs) {
   return lhs.flow == rhs.flow && lhs.time == rhs.time && lhs.used == rhs.used;
 }
 
-std::optional<std::tuple<rte_ether_hdr *, rte_ipv4_hdr *, rte_udp_hdr *>>
-get_packet_headers(rte_mbuf *m) {
-  // Get ethernet header.
-  rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
-
+rte_ipv4_hdr *get_ipv4_hdr(const rte_ether_hdr *eth_hdr) {
   // Get IPv4 header.
   if (eth_hdr->ether_type != rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4)) {
+    return nullptr;
+  }
+  return (struct rte_ipv4_hdr *)((uint8_t *)eth_hdr +
+                                 sizeof(struct rte_ether_hdr));
+}
+
+std::optional<std::tuple<rte_ipv4_hdr *, rte_udp_hdr *>>
+get_packet_headers(rte_ether_hdr *eth_hdr) {
+  // Get IPv4 header.
+  rte_ipv4_hdr *ipv4_hdr = get_ipv4_hdr(eth_hdr);
+  if (ipv4_hdr == nullptr) {
     return {};
   }
-  struct rte_ipv4_hdr *ipv4_hdr =
-      (struct rte_ipv4_hdr *)((uint8_t *)eth_hdr +
-                              sizeof(struct rte_ether_hdr));
 
   // Get UDP header.
   if (ipv4_hdr->next_proto_id != IPPROTO_UDP) {
@@ -52,7 +56,7 @@ get_packet_headers(rte_mbuf *m) {
   rte_udp_hdr *udp_hdr =
       (struct rte_udp_hdr *)((uint8_t *)ipv4_hdr + ip_hdr_offset);
 
-  return {{eth_hdr, ipv4_hdr, udp_hdr}};
+  return {{ipv4_hdr, udp_hdr}};
 }
 
 void swap_mac(rte_mbuf *m) {

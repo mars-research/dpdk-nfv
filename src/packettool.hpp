@@ -73,8 +73,10 @@ H AbslHashValue(H h, const FlowUsed &f) {
   return H::combine(std::move(h), f.flow, f.time, f.used);
 }
 
-std::optional<std::tuple<rte_ether_hdr *, rte_ipv4_hdr *, rte_udp_hdr *>>
-get_packet_headers(rte_mbuf *m);
+rte_ipv4_hdr *get_ipv4_hdr(const rte_ether_hdr *eth_hdr);
+
+std::optional<std::tuple<rte_ipv4_hdr *, rte_udp_hdr *>>
+get_packet_headers(rte_ether_hdr *eth_hdr);
 
 void swap_mac(rte_mbuf *m);
 void swap_mac(rte_ether_hdr *eth_hdr);

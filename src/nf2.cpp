@@ -13,15 +13,15 @@
 
 NF2OneWayNat::NF2OneWayNat() : port_hash_(MAX_SIZE), flow_vec_(MAX_SIZE) {}
 
-void NF2OneWayNat::_process_frames(const std::span<rte_mbuf *> packets) {
-  for (auto &&packet : packets) {
+void NF2OneWayNat::_process_frames(const std::span<rte_ether_hdr *> packets) {
+  for (auto &&eth_hdr : packets) {
 
     // Get packet header.
-    const auto headers = get_packet_headers(packet);
+    const auto headers = get_packet_headers(eth_hdr);
     if (!(headers)) {
       return;
     }
-    auto [eth_hdr, ipv4_hdr, udp_hdr] = headers.value();
+    auto [ipv4_hdr, udp_hdr] = headers.value();
 
     // Extract flow.
     const Flow flow(eth_hdr, ipv4_hdr, udp_hdr);

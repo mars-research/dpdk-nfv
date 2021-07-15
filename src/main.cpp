@@ -45,10 +45,6 @@
 #include <sys/types.h>
 
 #include "nfv.hpp"
-#include "nf1.hpp"
-#include "nf2.hpp"
-#include "nf3.hpp"
-#include "nf4.hpp"
 
 static volatile bool force_quit;
 
@@ -158,10 +154,11 @@ static void print_stats(void) {
 /* main processing loop */
 static void l2fwd_main_loop(void) {
   struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
+  struct rte_ether_hdr *eth_hdrs_burst[MAX_PKT_BURST];
   int sent;
   unsigned lcore_id;
   uint64_t prev_tsc, diff_tsc, cur_tsc, timer_tsc;
-  unsigned i, portid, nb_rx, nb_tx;
+  uint64_t i, portid, nb_rx, nb_tx;
   struct lcore_queue_conf *qconf;
   const uint64_t drain_tsc =
       (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S * BURST_TX_DRAIN_US;
@@ -180,24 +177,13 @@ static void l2fwd_main_loop(void) {
 
   RTE_LOG(INFO, L2FWD, "initializing network functions on lcore %u\n",
           lcore_id);
-  std::vector<std::unique_ptr<NetworkFunction>> nfs;
-  nfs.emplace_back(std::make_unique<NF1DecrementTtl>());
-  nfs.emplace_back(std::make_unique<NF2OneWayNat>());
-  nfs.emplace_back(std::make_unique<NF3Acl>(std::vector{Acl{
-    src_ip : 0,
-    dst_ip : {},
-    src_port : {},
-    dst_port : {},
-    established : {},
-    drop : false,
-  }}));
-  nfs.emplace_back(std::make_unique<NF4Maglev>());
+  init_nfs();
 
   RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
 
   for (i = 0; i < qconf->n_rx_port; i++) {
     portid = qconf->rx_port_list[i];
-    RTE_LOG(INFO, L2FWD, " -- lcoreid=%u portid=%u\n", lcore_id, portid);
+    RTE_LOG(INFO, L2FWD, " -- lcoreid=%u portid=%lu\n", lcore_id, portid);
   }
 
   while (!force_quit) {
@@ -246,10 +232,13 @@ static void l2fwd_main_loop(void) {
       port_statistics[portid].rx += nb_rx;
       std::span<rte_mbuf *> packets(pkts_burst, nb_rx);
 
-      // Process
-      for (auto && nf : nfs) {
-        nf->process_frames(packets);
+      // Get the eth headers.
+      for (uint64_t i = 0; i < nb_rx; i++) {
+        eth_hdrs_burst[i] = rte_pktmbuf_mtod(pkts_burst[i], struct rte_ether_hdr *);
       }
+
+      // Apply network functions.
+      run_nfs(eth_hdrs_burst, nb_rx);
 
       // TX
       nb_tx = rte_eth_tx_burst(portid, 0, pkts_burst, nb_rx);

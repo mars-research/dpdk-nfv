@@ -39,14 +39,14 @@ bool Acl::matches(const Flow &flow,
 NF3Acl::NF3Acl(const std::vector<Acl> acls)
     : flow_cache_(1 << 16), acls_(acls) {}
 
-void NF3Acl::_process_frames(const std::span<rte_mbuf *> packets) {
-  for (auto &&packet : packets) {
+void NF3Acl::_process_frames(const std::span<rte_ether_hdr *> packets) {
+  for (auto &&eth_hdr : packets) {
     // Get packet header.
-    const auto headers = get_packet_headers(packet);
+    const auto headers = get_packet_headers(eth_hdr);
     if (!(headers)) {
       return;
     }
-    auto [eth_hdr, ipv4_hdr, udp_hdr] = headers.value();
+    auto [ipv4_hdr, udp_hdr] = headers.value();
 
     // Extract flow.
     const Flow flow(eth_hdr, ipv4_hdr, udp_hdr);
