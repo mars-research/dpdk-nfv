@@ -12,7 +12,7 @@
 extern "C" void nf3_init() {}
 
 bool Acl::matches(const Flow &flow,
-              const absl::flat_hash_set<Flow> &connections) const {
+                  const absl::flat_hash_set<Flow> &connections) const {
   const bool src_ip_matched =
       !this->src_ip.has_value() || this->src_ip.value() == flow.src_ip;
   const bool dst_ip_matched =
@@ -29,36 +29,36 @@ bool Acl::matches(const Flow &flow,
       // pass if `established` is set to true.
       const Flow reversed_flow = flow.reverse_flow();
       return connections.contains(flow) ||
-              connections.contains(reversed_flow) == established;
+             connections.contains(reversed_flow) == established;
     }
     return true;
   }
   return false;
 }
 
-NF3Acl::NF3Acl(const std::vector<Acl> acls): flow_cache_(1 << 16), acls_(acls) {}
+NF3Acl::NF3Acl(const std::vector<Acl> acls)
+    : flow_cache_(1 << 16), acls_(acls) {}
 
-void NF3Acl::_process_frames(const std::span<rte_mbuf*> packets) {
-  for (auto&& packet : packets) {
-
-  // Get packet header.
-  const auto headers = get_packet_headers(packet);
-  if (!(headers)) {
-    return;
-  }
-  auto [eth_hdr, ipv4_hdr, udp_hdr] = headers.value();
-
-  // Extract flow.
-  const Flow flow(eth_hdr, ipv4_hdr, udp_hdr);
-
-  for (const auto &acl : this->acls_) {
-    if (acl.matches(flow, this->flow_cache_)) {
-      if (!acl.drop) {
-        this->flow_cache_.insert(flow);
-      }
-      // return !acl.drop;
+void NF3Acl::_process_frames(const std::span<rte_mbuf *> packets) {
+  for (auto &&packet : packets) {
+    // Get packet header.
+    const auto headers = get_packet_headers(packet);
+    if (!(headers)) {
+      return;
     }
-  }
-  // return false;
+    auto [eth_hdr, ipv4_hdr, udp_hdr] = headers.value();
+
+    // Extract flow.
+    const Flow flow(eth_hdr, ipv4_hdr, udp_hdr);
+
+    for (const auto &acl : this->acls_) {
+      if (acl.matches(flow, this->flow_cache_)) {
+        if (!acl.drop) {
+          this->flow_cache_.insert(flow);
+        }
+        // return !acl.drop;
+      }
+    }
+    // return false;
   }
 }

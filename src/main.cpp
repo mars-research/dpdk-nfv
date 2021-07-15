@@ -246,14 +246,16 @@ static void l2fwd_main_loop(void) {
       port_statistics[portid].rx += nb_rx;
       std::span<rte_mbuf *> packets(pkts_burst, nb_rx);
 
-      // // Process
-      // for (auto && nf : nfs) {
-      //   nf->process_frames(packets);
-      // }
+      // Process
+      for (auto && nf : nfs) {
+        nf->process_frames(packets);
+      }
 
       // TX
       nb_tx = rte_eth_tx_burst(portid, 0, pkts_burst, nb_rx);
+      // We drop the packets if tx is not able to keep up with the rate
       // assert(nb_tx == nb_rx);
+      port_statistics[portid].tx += nb_tx;
     }
   }
 }

@@ -19,7 +19,7 @@ NF4Maglev::NF4Maglev() { maglev_init(); }
 void NF4Maglev::_process_frames(const std::span<rte_mbuf *> packets) {
   for (auto &&packet : packets) {
     if (maglev_process_frame(rte_pktmbuf_mtod(packet, void *),
-                              rte_pktmbuf_pkt_len(packet)) != 1) {
+                            rte_pktmbuf_pkt_len(packet)) != -1) {
       swap_mac(packet);
     }
   }
