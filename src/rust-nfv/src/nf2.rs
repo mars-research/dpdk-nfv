@@ -6,6 +6,7 @@ use crate::packettool::{
     IHL_TO_BYTE_FACTOR,
     ipv4_extract_flow,
 };
+use crate::packettool::ETH_HEADER_LEN;
 
 use core::hash::BuildHasherDefault;
 
@@ -45,20 +46,21 @@ impl crate::nfv::NetworkFunction for Nf2OneWayNat {
     for pkt in packets.iter_mut() {
       // From netbricks
       unsafe {
-        if let Some((_, payload)) = get_mut_udp_payload(pkt) {
-          if let Some(flow) = ipv4_extract_flow(payload) {
+        if let Some((_, _)) = get_mut_udp_payload(pkt) {
+          let mut ipv4_hdr = &mut pkt[ETH_HEADER_LEN..];
+          if let Some(flow) = ipv4_extract_flow(&ipv4_hdr) {
             let found = match self.port_hash.get(&flow) {
               Some(s) => {
-                s.ipv4_stamp_flow(payload);
-                true
-              }
-              None => false,
-            };
-            if !found {
-              if self.next_port < MAX_PORT {
-                let assigned_port = self.next_port; //FIXME.
-                self.next_port += 1;
-                self.flow_vec[assigned_port as usize].flow = flow;
+                  s.ipv4_stamp_flow(&mut ipv4_hdr);
+                    true
+                  }
+                  None => false,
+                };
+                if !found {
+                    if self.next_port < MAX_PORT {
+                        let assigned_port = self.next_port; //FIXME.
+                        self.next_port += 1;
+                        self.flow_vec[assigned_port as usize].flow = flow;
                 self.flow_vec[assigned_port as usize].used = true;
                 let mut outgoing_flow = flow.clone();
                 //outgoing_flow.src_ip = ip;
@@ -68,7 +70,7 @@ impl crate::nfv::NetworkFunction for Nf2OneWayNat {
                 self.port_hash.insert(flow, outgoing_flow);
                 self.port_hash.insert(rev_flow, flow.reverse_flow());
 
-                outgoing_flow.ipv4_stamp_flow(payload);
+                outgoing_flow.ipv4_stamp_flow(&mut ipv4_hdr);
               }
             }
           }
