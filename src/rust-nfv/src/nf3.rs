@@ -5,6 +5,7 @@ use crate::packettool::{
     get_mut_udp_payload,
     Flow,
     ipv4_extract_flow,
+    ETH_HEADER_LEN,
 };
 
 
@@ -60,8 +61,9 @@ impl Nf3Acl {
 impl crate::nfv::NetworkFunction for Nf3Acl {
   fn process_frames(&mut self, packets: &mut[&mut[u8]]) {
     for pkt in packets.iter_mut() {
-      if let Some((_, payload)) = get_mut_udp_payload(pkt) {
-        if let Some(flow) = ipv4_extract_flow(payload) {
+      if let Some((_, _)) = get_mut_udp_payload(pkt) {
+        let mut ipv4_hdr = &mut pkt[ETH_HEADER_LEN..];
+        if let Some(flow) = ipv4_extract_flow(&ipv4_hdr) {
           for acl in &self.acls {
             if acl.matches(&flow, &self.flow_cache) {
               if !acl.drop {
