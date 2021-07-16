@@ -8,7 +8,7 @@ use crate::packettool::{
 };
 
 use core::hash::BuildHasherDefault;
-use byteorder::{BigEndian, ByteOrder};
+
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, Default)]

@@ -1,7 +1,4 @@
 use crate::packettool::{
-  get_mut_udp_payload,
-  Flow,
-  ipv4_extract_flow,
   swap_mac,
   get_flowhash,
 };
@@ -31,7 +28,7 @@ impl crate::nfv::NetworkFunction for Nf4Maglev {
         }
       };
 
-      if let Some(_) = backend {
+      if backend.is_some() {
           swap_mac(pkt);
       };
     }

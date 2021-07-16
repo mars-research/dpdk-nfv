@@ -1,6 +1,6 @@
-use core::hash::{BuildHasher, BuildHasherDefault, Hash, Hasher};
+use core::hash::{Hash, Hasher};
 
-use fnv::FnvHasher;
+
 use byteorder::{BigEndian, ByteOrder};
 
 pub const ETH_HEADER_LEN: usize = 14;

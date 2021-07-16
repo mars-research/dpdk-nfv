@@ -29,7 +29,7 @@ use twox_hash::XxHash;
 
 use core::default::Default;
 
-use hashbrown::HashMap;
+
 // For Maglev, we use a really stripped-down version of Indexmap
 use sashstore_redleaf::cindexmap::CIndex;
 
