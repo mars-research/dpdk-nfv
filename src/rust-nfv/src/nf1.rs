@@ -4,8 +4,12 @@ use crate::packettool::{ETH_HEADER_LEN, IPV4_TTL_OFFSET};
 
 pub const PKT_TTL_OFFSET : usize = ETH_HEADER_LEN + IPV4_TTL_OFFSET;
 
-pub struct Nf1DecrementTtl {
+pub struct Nf1DecrementTtl {}
 
+impl Nf1DecrementTtl {
+  pub fn new() -> Self {
+    Self {}
+  }
 }
 
 impl crate::nfv::NetworkFunction for Nf1DecrementTtl {

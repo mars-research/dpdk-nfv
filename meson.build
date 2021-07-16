@@ -31,7 +31,7 @@ rust_nfv_lib = custom_target(
   'rust_nfv',
   output: 'librust_nfv.a',
   build_always_stale: true,
-  command: ['cargo', 'build', '--manifest-path', meson.source_root() + '/src/rust-nfv/Cargo.toml', '--release', '--out-path', '.', '-Z', 'unstable-options'],
+  command: ['cargo', 'build', '--manifest-path', meson.source_root() + '/src/rust-nfv/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
 )
 rust_dependencies = dependencies + [
     #cpp.find_library('rust_nfv', dirs: meson.current_source_dir() + '/src/rust-nfv/target/release'),
@@ -65,5 +65,5 @@ executable('nfv-fxsave',
 executable('nfv-rust',
     sources,
     dependencies: rust_dependencies,
-    link_with: rust_nfvlib,
+    link_with: rust_nfv_lib,
 )
