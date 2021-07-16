@@ -13,8 +13,14 @@ let
     ];
   };
 in pkgs.mkShell {
-  buildInputs = [
-    pkgs.rust-bin.nightly."2021-01-10".default
-    pkgs.gcc11
+  buildInputs = with pkgs; [
+    rust-bin.nightly."2021-01-10".default
+    dpdk
+    libbsd
+    boost
+  ];
+  nativeBuildInputs = with pkgs; [
+    gcc11
+    pkg-config 
   ];
 }
