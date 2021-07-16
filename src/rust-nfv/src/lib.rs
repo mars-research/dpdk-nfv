@@ -23,9 +23,9 @@ static mut NFS: Vec<Box<dyn nfv::NetworkFunction>> = vec![];
 pub unsafe extern "C" fn init_nfs() {
     PACKETS.reserve(MAX_PKT_BURST);
     NFS = vec![
-        box nf1::Nf1DecrementTtl::new(),
+        box nf1::Nf1DecrementTtl::new(), 
         box nf2::Nf2OneWayNat::new(),
-        box nf3::Nf3Acl::new(vec![
+        box nf3::Nf3Acl::new(vec![ 
             nf3::Acl {
                 src_ip: Some(0),
                 dst_ip: None,
@@ -34,10 +34,19 @@ pub unsafe extern "C" fn init_nfs() {
                 established: None,
                 drop: false,
             },
-        ]),
-        box nf4::Nf4Maglev::new(),
+            ]), 
+        box nf4::Nf4Maglev::new(), 
     ];
 }
+
+// NF1 + NF2 = 9M
+// NF1 + NF3 = 14M
+// NF1 + NF4 = 14M
+// NF3 + NF4 = 9M
+// NF1 = 14M
+// NF2 = 9M
+// NF3 = 14M
+// NF4 = 14M
 
 #[no_mangle]
 pub unsafe extern "C" fn run_nfs(packets: * const * mut u8, num_pkt: u64) {
