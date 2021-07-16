@@ -18,6 +18,7 @@ in pkgs.mkShell {
     dpdk
     libbsd
     boost
+    meson
   ];
   nativeBuildInputs = with pkgs; [
     gcc11

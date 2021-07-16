@@ -26,14 +26,14 @@ dependencies = [
     dependency('libdpdk'),
 ]
 
+cargo = find_program('cargo')
 rust_nfv_lib = custom_target(
-    'rust_nfv',
-    output: 'librust_nfv.a',
-    build_always_stale: true,
-    command: ['cargo', 'build', '--manifest-path', 'src/rust-nfv/Cargo.toml', '--release'],
-    install_dir: 'src/rust-nfv/target/release')
+  'rust_nfv',
+  output: 'librust_nfv.a',
+  build_always_stale: true,
+  command: ['cargo', 'build', '--manifest-path', meson.source_root() + '/src/rust-nfv/Cargo.toml', '--release', '--out-path', '.', '-Z', 'unstable-options'],
+)
 rust_dependencies = dependencies + [
-    rust_nfv_lib,
     #cpp.find_library('rust_nfv', dirs: meson.current_source_dir() + '/src/rust-nfv/target/release'),
 ]
 
@@ -65,4 +65,5 @@ executable('nfv-fxsave',
 executable('nfv-rust',
     sources,
     dependencies: rust_dependencies,
+    link_with: rust_nfvlib,
 )
