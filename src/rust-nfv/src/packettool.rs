@@ -204,6 +204,16 @@ impl Flow {
             proto: self.proto,
         }
     }
+
+    pub fn get_dummy() -> Self {
+        Self {
+            src_ip: u32::max_value(),
+            dst_ip: u32::max_value() - 1,
+            src_port: 1000,
+            dst_port: 1001,
+            proto: 17,
+        }
+    }
 }
 
 pub fn ipv4_extract_flow(bytes: &[u8]) -> Option<Flow> {

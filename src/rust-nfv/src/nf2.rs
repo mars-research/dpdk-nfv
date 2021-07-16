@@ -49,6 +49,9 @@ impl crate::nfv::NetworkFunction for Nf2OneWayNat {
         if let Some((_, _)) = get_mut_udp_payload(pkt) {
           let mut ipv4_hdr = &mut pkt[ETH_HEADER_LEN..];
           if let Some(flow) = ipv4_extract_flow(&ipv4_hdr) {
+            // let s = Flow::get_dummy();
+            // s.ipv4_stamp_flow(ipv4_hdr);
+            // return;
             let found = match self.port_hash.get(&flow) {
               Some(s) => {
                   s.ipv4_stamp_flow(&mut ipv4_hdr);
