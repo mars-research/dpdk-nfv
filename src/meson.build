@@ -1,5 +1,8 @@
 sources += files(
   'main.cpp',
+)
+
+cpp_sources += files(
   'packettool.cpp',
   'nfv.cpp',
   'nf1.cpp',

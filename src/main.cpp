@@ -5,8 +5,6 @@
 // Borrowed from
 // https://github.com/DPDK/dpdk/blob/10aa375704c148d9e90b5e984066d719f7465357/examples/l2fwd/main.c
 
-#include <span>
-#include <vector>
 #include <memory>
 #include <ctype.h>
 #include <errno.h>

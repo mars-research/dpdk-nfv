@@ -1,1 +1,1 @@
-option('trampoline', type : 'combo', choices : ['no-fxsave', 'fxsave', 'no-trampoline'], value : 'fxsave')
+option('nfv_impl', type : 'combo', choices : ['cpp', 'rust'], value : 'cpp')
