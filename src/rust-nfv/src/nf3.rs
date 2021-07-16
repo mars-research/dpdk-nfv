@@ -6,7 +6,6 @@ use crate::packettool::{
     Flow,
     ipv4_extract_flow,
 };
-use alloc::vec::Vec;
 
 
 type FnvHash = BuildHasherDefault<FnvHasher>;
