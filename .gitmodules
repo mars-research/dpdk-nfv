@@ -1,3 +1,6 @@
 [submodule "user-trampoline"]
 	path = user-trampoline
 	url = git@github.com:mars-research/user-trampoline.git
+[submodule "src/rust-nfv/redleaf-nfv"]
+	path = src/rust-nfv/redleaf-nfv
+	url = git@github.com:mars-research/redleaf-nfv.git

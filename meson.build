@@ -26,8 +26,15 @@ dependencies = [
     dependency('libdpdk'),
 ]
 
+rust_nfv_lib = custom_target(
+    'rust_nfv',
+    output: 'librust_nfv.a',
+    build_always_stale: true,
+    command: ['cargo', 'build', '--manifest-path', 'src/rust-nfv/Cargo.toml', '--release'],
+    install_dir: 'src/rust-nfv/target/release')
 rust_dependencies = dependencies + [
-    cpp.find_library('rust_nfv', dirs: meson.current_source_dir() + '/src/rust-nfv/target/release')
+    rust_nfv_lib,
+    #cpp.find_library('rust_nfv', dirs: meson.current_source_dir() + '/src/rust-nfv/target/release'),
 ]
 
 cpp_dependencies = dependencies + [

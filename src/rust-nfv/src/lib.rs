@@ -1,3 +1,13 @@
+mod nfv;
+mod nf1;
+mod nf2;
+mod nf3;
+mod nf4;
+mod packettool;
+mod maglev;
+
+extern crate alloc;
+
 
 const MAX_PKT_BURST: usize = 32;
 const MAX_PKT_LEN: usize = 1514;
