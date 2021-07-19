@@ -1,13 +1,7 @@
 use fnv::FnvHasher;
 use hashbrown::HashSet;
 use core::hash::BuildHasherDefault;
-use crate::packettool::{
-    get_mut_udp_payload,
-    Flow,
-    ipv4_extract_flow,
-    ETH_HEADER_LEN,
-};
-
+use crate::packet::{Flow, Packet};
 
 type FnvHash = BuildHasherDefault<FnvHasher>;
 
@@ -44,37 +38,33 @@ impl Acl {
 
 
 pub struct Nf3Acl {
-  flow_cache: HashSet::<Flow, FnvHash>,
-  acls: Vec<Acl>,
+    flow_cache: HashSet::<Flow, FnvHash>,
+    acls: Vec<Acl>,
 }
 
 impl Nf3Acl {
-  pub fn new(acls: Vec<Acl>) -> Self {
-    Self {
-      flow_cache: HashSet::with_hasher(Default::default()),
-      acls,
+    pub fn new(acls: Vec<Acl>) -> Self {
+        Self {
+            flow_cache: HashSet::with_hasher(Default::default()),
+            acls,
+        }
     }
-  }
 }
 
 
 impl crate::nfv::NetworkFunction for Nf3Acl {
-  fn process_frames(&mut self, packets: &mut[&mut[u8]]) {
-    for pkt in packets.iter_mut() {
-      if let Some((_, _)) = get_mut_udp_payload(pkt) {
-        let mut ipv4_hdr = &mut pkt[ETH_HEADER_LEN..];
-        if let Some(flow) = ipv4_extract_flow(&ipv4_hdr) {
-          for acl in &self.acls {
-            if acl.matches(&flow, &self.flow_cache) {
-              if !acl.drop {
-                self.flow_cache.insert(flow);
-              }
-              //return !acl.drop;
+    fn process_frames(&mut self, packets: &mut[Packet]) {
+        for pkt in packets.iter_mut() {
+            let flow = pkt.get_flow();
+
+            for acl in &self.acls {
+                if acl.matches(&flow, &self.flow_cache) {
+                    if !acl.drop {
+                        self.flow_cache.insert(flow);
+                    }
+                    //return !acl.drop;
+                }
             }
-          }
-          //return false;
         }
-      }
     }
-  }
 }
