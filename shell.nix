@@ -19,6 +19,10 @@ in pkgs.mkShell {
     libbsd
     boost
     meson
+    linuxPackages.perf
+    (pkgs.writeScriptBin "sperf" ''
+      sudo ${linuxPackages.perf}/bin/perf "$@"
+    '')
   ];
   nativeBuildInputs = with pkgs; [
     gcc11
