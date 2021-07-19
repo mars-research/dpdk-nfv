@@ -98,6 +98,8 @@ impl Packet {
                 flow.dst_port,
             );
         }
+
+        self.recalculate_ip_checksum();
     }
 
     pub fn recalculate_ip_checksum(&mut self) {
