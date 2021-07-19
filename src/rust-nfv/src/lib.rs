@@ -5,6 +5,7 @@ mod nf1;
 mod nf2;
 mod nf3;
 mod nf4;
+mod nf5;
 mod packet;
 mod maglev;
 
@@ -34,6 +35,7 @@ pub unsafe extern "C" fn init_nfs() {
             },
             ]), 
         box nf4::Nf4Maglev::new(), 
+        box nf5::Nf5UpdateChecksum::new(),
     ];
 }
 

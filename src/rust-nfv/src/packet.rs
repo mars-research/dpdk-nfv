@@ -19,6 +19,7 @@ pub const IHL_TO_BYTE_FACTOR: usize = 4; // IHL is in terms of number of 32-bit 
 
 pub struct Packet {
     frame: &'static mut [u8],
+    dirty: bool,
 }
 
 impl Packet {
@@ -30,10 +31,15 @@ impl Packet {
         if ip_version == 4 || ip_proto == 17 {
             Some(Self {
                 frame,
+                dirty: false,
             })
         } else {
             None
         }
+    }
+
+    pub fn dirty(&self) -> bool {
+        self.dirty
     }
 
     pub fn ip_header_len(&self) -> usize {
@@ -41,22 +47,32 @@ impl Packet {
     }
 
     pub fn ip_len(&self) -> usize {
-        BigEndian::read_u16(&self.frame[ETH_HEADER_LEN + 2..ETH_HEADER_LEN + 3]) as usize
+        BigEndian::read_u16(&self.frame[ETH_HEADER_LEN + 2..ETH_HEADER_LEN + 4]) as usize
     }
 
     pub fn eth_len(&self) -> usize {
         ETH_HEADER_LEN + self.ip_len()
     }
 
-    pub fn ip_header(&mut self) -> &mut [u8] {
+    pub fn ip_header(&mut self) -> &[u8] {
         let ip_header_len = self.ip_header_len();
         &mut self.frame[ETH_HEADER_LEN..ETH_HEADER_LEN + ip_header_len]
     }
 
-    pub fn ip_payload(&mut self) -> &mut [u8] {
+    pub fn ip_header_mut(&mut self) -> &mut [u8] {
+        self.dirty = true;
+        let ip_header_len = self.ip_header_len();
+        &mut self.frame[ETH_HEADER_LEN..ETH_HEADER_LEN + ip_header_len]
+    }
+
+    pub fn ip_payload_mut(&mut self) -> &mut [u8] {
         let header_len = self.ip_header_len();
         let ip_len = self.ip_len();
         &mut self.frame[ETH_HEADER_LEN + header_len..ETH_HEADER_LEN + ip_len]
+    }
+
+    pub fn ip_payload(&mut self) -> &[u8] {
+        self.ip_payload_mut()
     }
 
     pub fn get_flow(&mut self) -> Flow {
@@ -84,28 +100,27 @@ impl Packet {
 
     pub fn set_flow(&mut self, flow: &Flow) {
         {
-            let ip_header = self.ip_header();
+            let ip_header = self.ip_header_mut();
 
             BigEndian::write_u32(&mut ip_header[12..16], flow.src_ip);
             BigEndian::write_u32(&mut ip_header[16..20], flow.dst_ip);
         }
 
         {
-            let ip_payload = self.ip_payload();
+            let ip_payload = self.ip_payload_mut();
             BigEndian::write_u16(&mut ip_payload[0..2], flow.src_port);
             BigEndian::write_u16(
                 &mut ip_payload[2..4],
                 flow.dst_port,
             );
         }
-
-        self.recalculate_ip_checksum();
+        self.dirty = true;
     }
 
     pub fn recalculate_ip_checksum(&mut self) {
         let mut checksum = 0;
         let ip_header_len = self.ip_header_len();
-        let ip_header = self.ip_header();
+        let ip_header = self.ip_header_mut();
 
         BigEndian::write_u16(&mut ip_header[10..12], 0);
 

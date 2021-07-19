@@ -11,7 +11,7 @@ impl Nf1DecrementTtl {
 impl crate::nfv::NetworkFunction for Nf1DecrementTtl {
     fn process_frames(&mut self, packets: &mut[Packet]) {
         for pkt in packets.iter_mut() {
-            let ip_header = pkt.ip_header();
+            let mut ip_header = pkt.ip_header_mut();
             ip_header[IPV4_TTL_OFFSET] -= 1;
         }
     }
