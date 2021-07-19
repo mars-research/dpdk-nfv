@@ -16,8 +16,9 @@ void Flow::ipv4_stamp_flow(rte_ipv4_hdr *ipv4_hdr, rte_udp_hdr *udp_hdr) const {
   udp_hdr->dst_port = this->dst_port;
 
   // Update IPv4 and l4 checksum.
+  // BTW we enabled offload so this is disabled.
   // Note that our Rust implementation doesn't do that.
-  rte_ipv4_udptcp_cksum(ipv4_hdr, udp_hdr);
+  // ipv4_hdr->hdr_checksum = rte_cpu_to_be_16(rte_ipv4_udptcp_cksum(ipv4_hdr, udp_hdr));
 }
 
 bool operator==(const Flow &lhs, const Flow &rhs) {

@@ -557,6 +557,9 @@ static void signal_handler(int signum) {
 }
 
 int main(int argc, char **argv) {
+  // Enable TX checksum offloading
+  port_conf.txmode.offloads |= DEV_TX_OFFLOAD_IPV4_CKSUM;
+
   struct lcore_queue_conf *qconf;
   int ret;
   uint16_t nb_ports;
@@ -700,6 +703,10 @@ int main(int argc, char **argv) {
     if (ret != 0)
       rte_exit(EXIT_FAILURE, "Error during getting device (port %u) info: %s\n",
                portid, strerror(-ret));
+
+    if (!(dev_info.tx_offload_capa & DEV_TX_OFFLOAD_IPV4_CKSUM))
+      rte_exit(EXIT_FAILURE, "Cannot support checksum: port=%u\n",
+               portid);
 
     if (dev_info.tx_offload_capa & DEV_TX_OFFLOAD_MBUF_FAST_FREE)
       local_port_conf.txmode.offloads |= DEV_TX_OFFLOAD_MBUF_FAST_FREE;
