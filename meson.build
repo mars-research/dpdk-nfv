@@ -24,6 +24,7 @@ dependencies = [
     cpp.find_library('pthread'),
     cpp.find_library('dl'),
     dependency('libdpdk'),
+    dependency('papi'),
 ]
 
 cargo = find_program('cargo')
