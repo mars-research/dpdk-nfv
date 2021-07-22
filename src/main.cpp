@@ -5,7 +5,6 @@
 // Borrowed from
 // https://github.com/DPDK/dpdk/blob/10aa375704c148d9e90b5e984066d719f7465357/examples/l2fwd/main.c
 
-#include <memory>
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
@@ -41,6 +40,9 @@
 #include <string.h>
 #include <sys/queue.h>
 #include <sys/types.h>
+#include <chrono>
+#include <iostream>
+#include <memory>
 
 #include "nfv.hpp"
 
@@ -100,18 +102,29 @@ struct rte_mempool *l2fwd_pktmbuf_pool = NULL;
 struct l2fwd_port_statistics {
   uint64_t tx;
   uint64_t rx;
+  uint64_t processed;
+  // Amount of time spent in processing in cycles.
+  uint64_t cycles_processed;
   uint64_t dropped;
 } __rte_cache_aligned;
 struct l2fwd_port_statistics port_statistics[RTE_MAX_ETHPORTS];
+struct l2fwd_port_statistics last_port_statistics[RTE_MAX_ETHPORTS];
 
 #define MAX_TIMER_PERIOD 86400 /* 1 day max */
 /* A tsc-based timer responsible for triggering statistics printout */
 static uint64_t timer_period = 10; /* default period is 10 seconds */
+/* Time of last print_stats */
+std::chrono::steady_clock::time_point last_print_stats_time =
+    std::chrono::steady_clock::now();
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
   uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
   unsigned portid;
+  const auto current_time = std::chrono::steady_clock::now();
+  typedef std::chrono::duration<double> duration_seconds_t;
+  duration_seconds_t duration = current_time - last_print_stats_time;
+  last_print_stats_time = current_time;
 
   total_packets_dropped = 0;
   total_packets_tx = 0;
@@ -127,23 +140,35 @@ static void print_stats(void) {
 
   for (portid = 0; portid < RTE_MAX_ETHPORTS; portid++) {
     /* skip disabled ports */
-    if ((l2fwd_enabled_port_mask & (1 << portid)) == 0)
-      continue;
-    printf("\nStatistics for port %u ------------------------------"
-           "\nPackets sent: %24" PRIu64 "\nPackets received: %20" PRIu64
-           "\nPackets dropped: %21" PRIu64,
-           portid, port_statistics[portid].tx, port_statistics[portid].rx,
-           port_statistics[portid].dropped);
+    if ((l2fwd_enabled_port_mask & (1 << portid)) == 0) continue;
+
+    const auto &stat = port_statistics[portid];
+    const auto &last_stat = last_port_statistics[portid];
+    const auto processed_delta = stat.processed - last_stat.processed;
+    const auto cycles_processed_delta =
+        stat.cycles_processed - last_stat.cycles_processed;
+
+    std::cout << "\nStatistics for port " << portid
+              << " ------------------------------"
+              << "\nPackets sent: " << port_statistics[portid].tx
+              << "\nPackets received: " << port_statistics[portid].rx
+              << "\nPackets dropped: " << port_statistics[portid].dropped
+              << "\nProcessing speed: " << processed_delta / duration.count()
+              << " packets/second"
+              << "\nProcessing speed: "
+              << (double)cycles_processed_delta / std::max(1ul, processed_delta)
+              << " cycles/packet";
 
     total_packets_dropped += port_statistics[portid].dropped;
     total_packets_tx += port_statistics[portid].tx;
     total_packets_rx += port_statistics[portid].rx;
   }
-  printf("\nAggregate statistics ==============================="
-         "\nTotal packets sent: %18" PRIu64
-         "\nTotal packets received: %14" PRIu64
-         "\nTotal packets dropped: %15" PRIu64,
-         total_packets_tx, total_packets_rx, total_packets_dropped);
+  memcpy(last_port_statistics, port_statistics, sizeof(last_port_statistics));
+  printf(
+      "\nAggregate statistics ==============================="
+      "\nTotal packets sent: %18" PRIu64 "\nTotal packets received: %14" PRIu64
+      "\nTotal packets dropped: %15" PRIu64,
+      total_packets_tx, total_packets_rx, total_packets_dropped);
   printf("\n====================================================\n");
 
   fflush(stdout);
@@ -236,7 +261,12 @@ static void l2fwd_main_loop(void) {
       }
 
       // Apply network functions.
+      const auto begin = _rdtsc();
       run_nfs(eth_hdrs_burst, nb_rx);
+      unsigned int UNUSED;
+      const auto end = _rdtscp(&UNUSED);
+      port_statistics[portid].cycles_processed += end - begin;
+      port_statistics[portid].processed += nb_rx;
 
       // TX
       nb_tx = rte_eth_tx_burst(portid, 0, pkts_burst, nb_rx);

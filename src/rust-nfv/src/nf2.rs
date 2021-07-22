@@ -60,8 +60,6 @@ impl crate::nfv::NetworkFunction for Nf2OneWayNat {
                     }
                 },
             };
-            
         }
-
     }
 }
