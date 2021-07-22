@@ -15,7 +15,6 @@ NF2OneWayNat::NF2OneWayNat() : port_hash_(MAX_SIZE), flow_vec_(MAX_SIZE) {}
 
 void NF2OneWayNat::_process_frames(const std::span<rte_ether_hdr *> packets) {
   for (auto &&eth_hdr : packets) {
-
     // Get packet header.
     const auto headers = get_packet_headers(eth_hdr);
     if (!(headers)) {
@@ -38,7 +37,7 @@ void NF2OneWayNat::_process_frames(const std::span<rte_ether_hdr *> packets) {
       this->next_port_++;
 
       // Update flow_vec
-      this->flow_vec_[assigned_port] = { flow, 0, true };
+      this->flow_vec_[assigned_port] = {flow, 0, true};
 
       // Create a new outgoing flow.
       Flow outgoing_flow = flow;

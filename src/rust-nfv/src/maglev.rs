@@ -29,7 +29,6 @@ use twox_hash::XxHash;
 
 use core::default::Default;
 
-
 // For Maglev, we use a really stripped-down version of Indexmap
 use sashstore_redleaf::cindexmap::CIndex;
 
@@ -170,7 +169,9 @@ impl<N: Hash + Eq> Maglev<N> {
         let x = match cache.get(&hash) {
             Some(idx) => {
                 // Use cached backend
-                unsafe { HIT_COUNT += 1; }
+                unsafe {
+                    HIT_COUNT += 1;
+                }
                 idx
             }
             None => {
@@ -179,7 +180,9 @@ impl<N: Hash + Eq> Maglev<N> {
                 self.lookup[hash % self.lookup.len()] as usize
             }
         };
-        unsafe { HASHMAP_TOTAL += 1; }
+        unsafe {
+            HASHMAP_TOTAL += 1;
+        }
 
         if set_cache {
             //println!("inserting ");

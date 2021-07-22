@@ -1,6 +1,6 @@
-use hashbrown::HashSet;
-use core::hash::BuildHasherDefault;
 use crate::packet::{Flow, Packet};
+use core::hash::BuildHasherDefault;
+use hashbrown::HashSet;
 
 // type Hasher = BuildHasherDefault<fnv::FnvHasher>;
 type Hasher = BuildHasherDefault<wyhash::WyHash>;
@@ -36,9 +36,8 @@ impl Acl {
     }
 }
 
-
 pub struct Nf3Acl {
-    flow_cache: HashSet::<Flow, Hasher>,
+    flow_cache: HashSet<Flow, Hasher>,
     acls: Vec<Acl>,
 }
 
@@ -51,9 +50,8 @@ impl Nf3Acl {
     }
 }
 
-
 impl crate::nfv::NetworkFunction for Nf3Acl {
-    fn process_frames(&mut self, packets: &mut[Packet]) {
+    fn process_frames(&mut self, packets: &mut [Packet]) {
         for pkt in packets.iter_mut() {
             let flow = pkt.get_flow();
 

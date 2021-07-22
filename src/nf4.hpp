@@ -5,10 +5,10 @@
 #include "nfv.hpp"
 
 class NF4Maglev : public NetworkFunction {
-private:
+ private:
   void _process_frames(const std::span<rte_ether_hdr*> packets) override;
 
-public:
+ public:
   NF4Maglev();
 
   void process_frames(const std::span<rte_ether_hdr*> packets) override;

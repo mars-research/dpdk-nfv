@@ -93,8 +93,11 @@ impl Packet {
         };
 
         Flow {
-            proto, src_ip, dst_ip,
-            src_port, dst_port,
+            proto,
+            src_ip,
+            dst_ip,
+            src_port,
+            dst_port,
         }
     }
 
@@ -109,10 +112,7 @@ impl Packet {
         {
             let ip_payload = self.ip_payload_mut();
             BigEndian::write_u16(&mut ip_payload[0..2], flow.src_port);
-            BigEndian::write_u16(
-                &mut ip_payload[2..4],
-                flow.dst_port,
-            );
+            BigEndian::write_u16(&mut ip_payload[2..4], flow.dst_port);
         }
         self.dirty = true;
     }
