@@ -1,10 +1,12 @@
 project('dpdk-nfv', ['cpp'], default_options: [
     'buildtype=release',
     'optimization=3',
+    'debug=true',
     #'b_lto=true',
     'cpp_std=gnu++20',
     'warning_level=3',
     'werror=true',
+    'cpp_args=-ggdb -g3 -fno-omit-frame-pointer',
     ],)
 
 add_project_arguments('-Wno-deprecated-declarations', language: 'cpp')
@@ -24,7 +26,7 @@ dependencies = [
     cpp.find_library('pthread'),
     cpp.find_library('dl'),
     dependency('libdpdk'),
-    dependency('papi'),
+    #dependency('papi'),
 ]
 
 cargo = find_program('cargo')
@@ -39,7 +41,7 @@ rust_dependencies = dependencies + [
 ]
 
 cpp_dependencies = dependencies + [
-    dependency('absl_container', default_options: ['werror=false', 'cpp_args=-Wno-pedantic', 'warning_level=1']),
+    dependency('absl_container', default_options: ['werror=false', 'cpp_args=-Wno-pedantic', 'warning_level=1', 'debug=true']),
     dependency('boost'),
 ]
 

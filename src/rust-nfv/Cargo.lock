@@ -117,6 +117,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand_core"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7"
+
+[[package]]
 name = "rust-nfv"
 version = "0.1.0"
 dependencies = [
@@ -126,6 +132,7 @@ dependencies = [
  "hashbrown",
  "sashstore-redleaf",
  "twox-hash",
+ "wyhash",
 ]
 
 [[package]]
@@ -176,4 +183,13 @@ checksum = "04f8ab788026715fa63b31960869617cba39117e520eb415b0139543e325ab59"
 dependencies = [
  "cfg-if 0.1.10",
  "static_assertions",
+]
+
+[[package]]
+name = "wyhash"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baf6e163c25e3fac820b4b453185ea2dea3b6a3e0a721d4d23d75bd33734c295"
+dependencies = [
+ "rand_core",
 ]

@@ -1,9 +1,9 @@
-use fnv::FnvHasher;
 use hashbrown::HashSet;
 use core::hash::BuildHasherDefault;
 use crate::packet::{Flow, Packet};
 
-type FnvHash = BuildHasherDefault<FnvHasher>;
+// type Hasher = BuildHasherDefault<fnv::FnvHasher>;
+type Hasher = BuildHasherDefault<wyhash::WyHash>;
 
 // From netbricks
 #[derive(Clone)]
@@ -18,7 +18,7 @@ pub struct Acl {
 }
 
 impl Acl {
-    pub fn matches(&self, flow: &Flow, connections: &HashSet<Flow, FnvHash>) -> bool {
+    pub fn matches(&self, flow: &Flow, connections: &HashSet<Flow, Hasher>) -> bool {
         if (self.src_ip.is_none() || self.src_ip.unwrap() == (flow.src_ip))
             && (self.dst_ip.is_none() || self.dst_ip.unwrap() == (flow.dst_ip))
             && (self.src_port.is_none() || flow.src_port == self.src_port.unwrap())
@@ -38,7 +38,7 @@ impl Acl {
 
 
 pub struct Nf3Acl {
-    flow_cache: HashSet::<Flow, FnvHash>,
+    flow_cache: HashSet::<Flow, Hasher>,
     acls: Vec<Acl>,
 }
 

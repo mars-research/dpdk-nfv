@@ -37,8 +37,8 @@ void NF2OneWayNat::_process_frames(const std::span<rte_ether_hdr *> packets) {
       const auto assigned_port = this->next_port_;
       this->next_port_++;
 
-      this->flow_vec_[assigned_port].flow = flow;
-      this->flow_vec_[assigned_port].used = true;
+      // Update flow_vec
+      this->flow_vec_[assigned_port] = { flow, 0, true };
 
       // Create a new outgoing flow.
       Flow outgoing_flow = flow;
