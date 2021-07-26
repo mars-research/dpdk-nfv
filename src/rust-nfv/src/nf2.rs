@@ -1,7 +1,7 @@
 use crate::packet::{Flow, Packet};
 
 use core::hash::BuildHasherDefault;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 #[derive(Clone, Copy, Default)]
 struct FlowUsed {
