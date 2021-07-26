@@ -29,7 +29,7 @@ impl Nf2OneWayNat {
                 65536,
                 Default::default(),
             ),
-            flow_vec: (MIN_PORT..65535).map(|_| Default::default()).collect(),
+            flow_vec: (0..65535).map(|_| Default::default()).collect(),
             next_port: MIN_PORT,
         }
     }

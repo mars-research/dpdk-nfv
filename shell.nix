@@ -1,7 +1,7 @@
 let
   rust-overlay = builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/41b11431e8dfa23263913bb96b5ef1913e01dfc1.tar.gz";
-    sha256 = "0489dgd00ckq4imdl064v1c9l2hvblvji1mmc1x1mqpan5mpzcxf";
+    url = "https://github.com/oxalica/rust-overlay/archive/bb00ab948702b4170914064263b37eff0b122471.tar.gz";
+    sha256 = "0q6fbclal5nddk6lsblz1gnd6zvywbljd7qgfkgzzlwm199qvq3p";
   };
 
   # Allows DPDK to be built with example programs
@@ -21,7 +21,7 @@ let
   };
 in pkgs.mkShell {
   buildInputs = with pkgs; [
-    rust-bin.nightly."2021-01-10".default
+    rust-bin.nightly."2021-07-26".default
     dpdk
     libbsd
     boost
