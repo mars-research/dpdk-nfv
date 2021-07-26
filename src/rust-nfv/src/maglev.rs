@@ -23,14 +23,17 @@ use core::alloc::Layout;
 use core::cell::RefCell;
 use core::hash::{BuildHasher, BuildHasherDefault, Hash, Hasher};
 use core::iter;
+use core::default::Default;
 
 use fnv::FnvHasher;
 use twox_hash::XxHash;
+use hashbrown::HashMap;
+use wyhash::WyHash;
 
-use core::default::Default;
+// type Hasher1 = BuildHasherDefault<wyhash::WyHash>;
 
 // For Maglev, we use a really stripped-down version of Indexmap
-use sashstore_redleaf::cindexmap::CIndex;
+// use sashstore_redleaf::cindexmap::CIndex;
 
 const TABLE_SIZE: usize = 65537;
 const CACHE_SIZE: usize = 1 << 21;
@@ -48,14 +51,14 @@ lut (consistent hashing), cache (connection tracking)
 - if not found: (lut[hash] -> backend number) and insert into cache
 */
 
-type FnvHashFactory = BuildHasherDefault<FnvHasher>;
-type XxHashFactory = BuildHasherDefault<XxHash>;
+type Hasher1 = BuildHasherDefault<FnvHasher>;
+type Hasher2 = BuildHasherDefault<XxHash>;
 
 /// Maglev lookup table
 pub struct Maglev<N> {
     pub nodes: Vec<N>,
     pub lookup: Vec<i8>,
-    pub cache: RefCell<CIndex<usize, usize>>,
+    pub cache: RefCell<HashMap<usize, usize>>,
 }
 
 impl<N: Hash + Eq> Maglev<N> {
@@ -63,7 +66,7 @@ impl<N: Hash + Eq> Maglev<N> {
     pub fn new<I: IntoIterator<Item = N>>(nodes: I) -> Self {
         let nodes = nodes.into_iter().collect::<Vec<_>>();
         let lookup = Self::populate(&nodes);
-        let cache = RefCell::new(CIndex::with_capacity(CACHE_SIZE));
+        let cache = RefCell::new(HashMap::with_capacity_and_hasher(CACHE_SIZE, Default::default()));
 
         Maglev {
             nodes,
@@ -76,8 +79,8 @@ impl<N: Hash + Eq> Maglev<N> {
     fn hash_offset_skip<Q: Hash + Eq + ?Sized>(
         key: &Q,
         m: usize,
-        h1f: &FnvHashFactory,
-        h2f: &XxHashFactory,
+        h1f: &Hasher1,
+        h2f: &Hasher2,
     ) -> (usize, usize) {
         let mut h1 = h1f.build_hasher();
         let mut h2 = h2f.build_hasher();
@@ -97,8 +100,8 @@ impl<N: Hash + Eq> Maglev<N> {
         let m = TABLE_SIZE;
         let n = nodes.len();
 
-        let h1f: FnvHashFactory = Default::default();
-        let h2f: XxHashFactory = Default::default();
+        let h1f: Hasher1 = Default::default();
+        let h2f: Hasher2 = Default::default();
 
         let permutation: Vec<Vec<usize>> = nodes
             .iter()
@@ -154,7 +157,7 @@ impl<N: Hash + Eq> Maglev<N> {
         Q: Hash + Eq,
     {
         // NetBricks hashes the flow signature with FNV
-        let h1f: FnvHashFactory = Default::default();
+        let h1f: Hasher1 = Default::default();
         let mut h1 = h1f.build_hasher();
         key.hash(&mut h1);
         let hash = h1.finish() as usize;
@@ -172,7 +175,7 @@ impl<N: Hash + Eq> Maglev<N> {
                 unsafe {
                     HIT_COUNT += 1;
                 }
-                idx
+                *idx
             }
             None => {
                 // Use lookup directly
