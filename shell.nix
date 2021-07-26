@@ -26,6 +26,8 @@ in pkgs.mkShell {
     libbsd
     boost
     meson
+    ninja
+    nasm
     linuxPackages.perf
     (pkgs.writeScriptBin "sperf" ''
       sudo ${linuxPackages.perf}/bin/perf "$@"
