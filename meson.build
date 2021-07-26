@@ -6,7 +6,7 @@ project('dpdk-nfv', ['cpp'], default_options: [
     'cpp_std=gnu++20',
     'warning_level=3',
     'werror=true',
-    'cpp_args=-ggdb -g3 -fno-omit-frame-pointer',
+    'cpp_args=-ggdb -g3 -fno-omit-frame-pointer -mtune=native,-march=native',
     ],)
 
 add_project_arguments('-Wno-deprecated-declarations', language: 'cpp')
@@ -34,7 +34,7 @@ rust_nfv_lib = custom_target(
   'rust_nfv',
   output: 'librust_nfv.a',
   build_always_stale: true,
-  command: ['cargo', 'build', '--manifest-path', meson.source_root() + '/src/rust-nfv/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
+  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build', '--manifest-path', meson.source_root() + '/src/rust-nfv/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
 )
 rust_dependencies = dependencies + [
     #cpp.find_library('rust_nfv', dirs: meson.current_source_dir() + '/src/rust-nfv/target/release'),
