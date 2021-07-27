@@ -19,7 +19,7 @@ endif
 
 no_trampoline_asm_args = []
 no_fxsave_asm_args = no_trampoline_asm_args + ['-DUSE_TRAMPOLINE']
-fxsave_asm_args = no_fxsave_asm_args + ['-DUSE_FXSAVE']
+fxsave_asm_args = no_fxsave_asm_args + ['-DUSE_SIMD']
 
 no_trampoline_asm_gen = generator(nasm,
   output : '@BASENAME@.o',
