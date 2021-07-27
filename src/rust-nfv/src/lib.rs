@@ -33,7 +33,6 @@ pub unsafe extern "C" fn init_nfs() {
             drop: false,
         }]),
         box nf4::Nf4Maglev::new(),
-        // box nf5::Nf5UpdateChecksum::new(),
     ];
 }
 
