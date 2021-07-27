@@ -19,8 +19,10 @@ pub const UDP_CHECKSUM_OFFSET: usize = 6;
 pub const IHL_TO_BYTE_FACTOR: usize = 4; // IHL is in terms of number of 32-bit words.
 
 pub fn swap_mac(frame: &mut [u8]) {
-    for i in 0..6 {
-        frame.swap(i, 6 + i);
+    let macs = &mut frame[..12];
+    {
+        let (dst_mac, src_mac) = split_at_mut(6);
+        dst_mac.swap_with_slice(src_mac);
     }
 }
 
