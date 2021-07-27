@@ -21,7 +21,7 @@ let
   };
 in pkgs.mkShell {
   buildInputs = with pkgs; [
-    rust-bin.nightly."2021-07-26".default
+    rust-bin.nightly."2021-07-26".complete
     dpdk
     libbsd
     boost

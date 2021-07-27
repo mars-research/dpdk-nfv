@@ -29,12 +29,19 @@ dependencies = [
     #dependency('papi'),
 ]
 
+rust_src_path = meson.source_root() + '/src/rust-nfv/'
 cargo = find_program('cargo')
 rust_nfv_lib = custom_target(
   'rust_nfv',
   output: 'librust_nfv.a',
   build_always_stale: true,
-  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build', '--manifest-path', meson.source_root() + '/src/rust-nfv/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
+  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build', '--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
+)
+rust_nfv_no_simd_lib = custom_target(
+  'rust_nfv_no_simd',
+  output: 'librust_nfv_no_simd.a',
+  build_always_stale: true,
+  command: ['bash', '-c', 'env RUSTFLAGS="-C target-cpu=native" cargo build --target ' + rust_src_path + '/x86_64-unknown-linux-gnu-nosimd.json -Zbuild-std --manifest-path ' + rust_src_path + '/Cargo.toml --release --out-dir ./no_simd -Z unstable-options && cp ./no_simd/librust_nfv.a ./librust_nfv_no_simd.a'],
 )
 rust_dependencies = dependencies + [
     #cpp.find_library('rust_nfv', dirs: meson.current_source_dir() + '/src/rust-nfv/target/release'),
@@ -69,4 +76,9 @@ executable('nfv-rust',
     sources,
     dependencies: rust_dependencies,
     link_with: rust_nfv_lib,
+)
+executable('nfv-rust-no-simd',
+    sources,
+    dependencies: rust_dependencies,
+    link_with: rust_nfv_no_simd_lib,
 )
