@@ -1,5 +1,6 @@
 sources += files(
   'main.cpp',
+  '../user-trampoline/rt.c',
 )
 
 cpp_sources += files(
@@ -9,7 +10,6 @@ cpp_sources += files(
   'nf2.cpp',
   'nf3.cpp',
   'nf4.cpp',
-  '../user-trampoline/rt.c',
 )
 
 nasm = find_program('nasm', required: false)
@@ -18,7 +18,7 @@ if not nasm.found()
 endif
 
 no_trampoline_asm_args = []
-no_fxsave_asm_args = no_trampoline_asm_args + ['-DUSE_TRAMPOLINE']
+no_fxsave_asm_args = no_trampoline_asm_args + ['-DUSE_TRAMPOLINE', '-DUSE_REGWIPE']
 fxsave_asm_args = no_fxsave_asm_args + ['-DUSE_SIMD']
 
 no_trampoline_asm_gen = generator(nasm,

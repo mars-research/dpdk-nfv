@@ -47,6 +47,9 @@
 #include <sys/types.h>
 
 #include "nfv.hpp"
+extern "C" {
+#include "../user-trampoline/rt.h"
+}
 
 static volatile bool force_quit;
 
@@ -598,6 +601,9 @@ int main(int argc, char **argv) {
   std::cout.imbue(std::locale());
   std::cout << std::fixed;
   std::cout << std::setprecision(2);
+
+  // Initialize RT
+  RT_init();
 
   struct lcore_queue_conf *qconf;
   int ret;
