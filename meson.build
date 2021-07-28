@@ -46,10 +46,6 @@ if not get_option('simd')
     add_project_arguments(simd_disabling_args, language: 'cpp')
 endif
 
-no_trampoline_objects = []
-no_fxsave_objects = []
-fxsave_objects = []
-cpp_sources = []
 sources = []
 subdir('src')
 
@@ -83,33 +79,44 @@ cpp_dependencies = dependencies + [
     dependency('boost'),
 ]
 
-libsashstore = subproject('libsashstore')
+include_directories = [
+    libnfv_inc,
+]
+link_with = []
 
 executable('nfv-notrampoline',
-    sources + cpp_sources + no_trampoline_objects,
+    sources + no_trampoline_objects,
     dependencies: cpp_dependencies,
-    include_directories: libsashstore.get_variable('libsashstore_inc'),
-    link_with: libsashstore.get_variable('libsashstore'),
+    include_directories: include_directories,
+    link_with: link_with + [
+        libnfv_no_trampoline,
+    ]
 )
 executable('nfv-nofxsave',
-    sources + cpp_sources + no_fxsave_objects,
+    sources + no_fxsave_objects,
     dependencies: cpp_dependencies,
-    include_directories: libsashstore.get_variable('libsashstore_inc'),
-    link_with: libsashstore.get_variable('libsashstore'),
+    include_directories: include_directories,
+    link_with: link_with + [
+        libnfv_no_fxsave,
+    ]
 )
 executable('nfv-fxsave',
-    sources + cpp_sources + fxsave_objects,
+    sources + fxsave_objects,
     dependencies: cpp_dependencies,
-    include_directories: libsashstore.get_variable('libsashstore_inc'),
-    link_with: libsashstore.get_variable('libsashstore'),
+    include_directories: include_directories,
+    link_with: link_with + [
+        libnfv_fxsave,
+    ]
 )
 executable('nfv-rust',
     sources,
+    include_directories: include_directories,
     dependencies: rust_dependencies,
     link_with: rust_nfv_lib,
 )
 executable('nfv-rust-no-simd',
     sources,
+    include_directories: include_directories,
     dependencies: rust_dependencies,
     link_with: rust_nfv_no_simd_lib,
 )
