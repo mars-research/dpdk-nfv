@@ -5,13 +5,46 @@ project('dpdk-nfv', ['cpp'], default_options: [
     #'b_lto=true',
     'cpp_std=gnu++20',
     'warning_level=3',
-    'werror=true',
-    'cpp_args=-ggdb -g3 -fno-omit-frame-pointer -mtune=native,-march=native',
-    ],)
+    ],
+)
 
-add_project_arguments('-Wno-deprecated-declarations', language: 'cpp')
-add_project_arguments('-Wno-error=pedantic', language: 'cpp')
-add_project_arguments('-Wno-pedantic', language: 'cpp')
+cpp_args = [
+    '-ggdb',
+    '-g3',
+    '-fno-omit-frame-pointer',
+    '-mtune=native',
+    '-march=native',
+    '-Wno-pedantic',
+    '-Wno-error=pedantic',
+    '-Wno-deprecated-declarations'
+]
+if not get_option('simd')
+    simd_disabling_args = [
+        '-mno-mmx',
+        '-mno-sse',
+        '-mno-sse2',
+        '-mno-sse3',
+        '-mno-ssse3',
+        '-mno-sse4',
+        '-mno-sse4a',
+        '-mno-sse4.1',
+        '-mno-sse4.2',
+        '-mno-avx',
+        '-mno-avx2',
+        '-mno-avx512f',
+        '-mno-avx512pf',
+        '-mno-avx512er',
+        '-mno-avx512cd',
+        '-mno-avx512vl',
+        '-mno-avx512bw',
+        '-mno-avx512dq',
+        '-mno-avx512ifma',
+        '-mno-avx512vbmi',
+        '-msoft-float',
+        '-lsoft-fp']
+    cpp_args += simd_disabling_args
+    add_project_arguments(simd_disabling_args, language: 'cpp')
+endif
 
 no_trampoline_objects = []
 no_fxsave_objects = []
@@ -43,12 +76,10 @@ rust_nfv_no_simd_lib = custom_target(
   build_always_stale: true,
   command: ['bash', '-c', 'env RUSTFLAGS="-C target-cpu=native" cargo build --target ' + rust_src_path + '/x86_64-unknown-linux-gnu-nosimd.json -Zbuild-std --manifest-path ' + rust_src_path + '/Cargo.toml --release --out-dir ./no_simd -Z unstable-options && cp ./no_simd/librust_nfv.a ./librust_nfv_no_simd.a'],
 )
-rust_dependencies = dependencies + [
-    #cpp.find_library('rust_nfv', dirs: meson.current_source_dir() + '/src/rust-nfv/target/release'),
-]
+rust_dependencies = dependencies
 
 cpp_dependencies = dependencies + [
-    dependency('absl_container', default_options: ['werror=false', 'cpp_args=-Wno-pedantic', 'warning_level=1', 'debug=true']),
+    dependency('absl_container', default_options: ['werror=false', 'cpp_args=' + ' '.join(cpp_args), 'warning_level=1', 'debug=true']),
     dependency('boost'),
 ]
 

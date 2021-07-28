@@ -1,1 +1,2 @@
-option('nfv_impl', type : 'combo', choices : ['cpp', 'rust'], value : 'cpp')
+option('packet_burst_size', type : 'combo', choices : ['cpp', 'rust'], value : 'cpp')
+option('simd', type : 'boolean', value : true)
