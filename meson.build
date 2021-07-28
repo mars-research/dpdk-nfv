@@ -1,4 +1,4 @@
-project('dpdk-nfv', ['cpp'], default_options: [
+project('dpdk-nfv', ['c', 'cpp'], default_options: [
     'buildtype=release',
     'optimization=3',
     'debug=true',
@@ -78,31 +78,34 @@ cpp_dependencies = dependencies + [
 
 include_directories = [
     libnfv_inc,
+    libtrampoline_inc,
 ]
-link_with = []
+link_with = [
+    libnfv,
+]
 
 executable('nfv-notrampoline',
-    sources + no_trampoline_objects,
+    sources,
     dependencies: cpp_dependencies,
     include_directories: include_directories,
     link_with: link_with + [
-        libnfv_no_trampoline,
+        libtrampoline_no_trampoline,
     ]
 )
 executable('nfv-nofxsave',
-    sources + no_fxsave_objects,
+    sources,
     dependencies: cpp_dependencies,
     include_directories: include_directories,
     link_with: link_with + [
-        libnfv_no_fxsave,
+        libtrampoline_no_fxsave,
     ]
 )
 executable('nfv-fxsave',
-    sources + fxsave_objects,
+    sources,
     dependencies: cpp_dependencies,
     include_directories: include_directories,
     link_with: link_with + [
-        libnfv_fxsave,
+        libtrampoline_fxsave,
     ]
 )
 executable('nfv-rust',

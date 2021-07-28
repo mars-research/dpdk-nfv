@@ -4,3 +4,4 @@ sources += files(
 )
 
 subdir('libnfv')
+subdir('libtrampoline')
