@@ -7,6 +7,7 @@ project('dpdk-nfv', ['cpp'], default_options: [
     'warning_level=3',
     ],
 )
+rust_src_path = meson.source_root() + '/rust-nfv/'
 
 cpp_args = [
     '-ggdb',
@@ -18,6 +19,7 @@ cpp_args = [
     '-Wno-error=pedantic',
     '-Wno-deprecated-declarations'
 ]
+rust_target = []
 if not get_option('simd')
     simd_disabling_args = [
         '-mno-mmx',
@@ -43,7 +45,10 @@ if not get_option('simd')
         '-msoft-float',
         '-lsoft-fp']
     cpp_args += simd_disabling_args
-    add_project_arguments(simd_disabling_args, language: 'cpp')
+    # We don't add it to the entire project. Main uses STD, which uses SIMD.
+    #add_project_arguments(simd_disabling_args, language: 'cpp')
+
+    rust_target = ['--target', rust_src_path + '/x86_64-unknown-linux-gnu-nosimd.json', '-Zbuild-std']
 endif
 
 sources = []
@@ -58,24 +63,16 @@ dependencies = [
     #dependency('papi'),
 ]
 
-rust_src_path = meson.source_root() + '/rust-nfv/'
 cargo = find_program('cargo')
 rust_nfv_lib = custom_target(
   'rust_nfv',
   output: 'librust_nfv.a',
   build_always_stale: true,
-  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build', '--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
-)
-rust_nfv_no_simd_lib = custom_target(
-  'rust_nfv_no_simd',
-  output: 'librust_nfv_no_simd.a',
-  build_always_stale: true,
-  command: ['bash', '-c', 'env RUSTFLAGS="-C target-cpu=native" cargo build --target ' + rust_src_path + '/x86_64-unknown-linux-gnu-nosimd.json -Zbuild-std --manifest-path ' + rust_src_path + '/Cargo.toml --release --out-dir ./no_simd -Z unstable-options && cp ./no_simd/librust_nfv.a ./librust_nfv_no_simd.a'],
+  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build'] + rust_target + ['--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
 )
 rust_dependencies = dependencies
 
 cpp_dependencies = dependencies + [
-    dependency('absl_container', default_options: ['werror=false', 'cpp_args=' + ' '.join(cpp_args), 'warning_level=1', 'debug=true']),
     dependency('boost'),
 ]
 
@@ -113,10 +110,4 @@ executable('nfv-rust',
     include_directories: include_directories,
     dependencies: rust_dependencies,
     link_with: rust_nfv_lib,
-)
-executable('nfv-rust-no-simd',
-    sources,
-    include_directories: include_directories,
-    dependencies: rust_dependencies,
-    link_with: rust_nfv_no_simd_lib,
 )

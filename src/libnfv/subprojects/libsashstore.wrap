@@ -1,7 +1,0 @@
-[wrap-git]
-url = git@github.com:mars-research/l2fwd-maglev.git
-revision = 7a565bf1fe4174c01ece3ce6cb9a1229468e0654
-
-[provide]
-libsashstore_inc = libsashstore_inc 
-libsashstore = libsashstore 
