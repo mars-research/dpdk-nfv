@@ -62,7 +62,7 @@ dependencies = [
     #dependency('papi'),
 ]
 
-rust_src_path = meson.source_root() + '/src/rust-nfv/'
+rust_src_path = meson.source_root() + '/rust-nfv/'
 cargo = find_program('cargo')
 rust_nfv_lib = custom_target(
   'rust_nfv',
