@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import sys
 import csv
 import itertools
@@ -11,9 +10,10 @@ m = {}
 for line in content:
   col, row, val = tuple(map(str.rstrip, line.rstrip().split(',')))
   row = int(row)
+  val = int(val)
   if row not in m:
     m[row] = {}
-  m[row][col] = val
+  m[row][col] = f'{val / 1E6: .2f}'
 
 row_header = m.keys()
 col_header = ['batch_size'] + list(set(itertools.chain.from_iterable(map(dict.keys, m.values()))))

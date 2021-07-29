@@ -19,6 +19,7 @@
         gcc11
         pkg-config
 
+        python3
         linuxPackages.perf
         (pkgs.writeScriptBin "sperf" ''
           sudo ${linuxPackages.perf}/bin/perf "$@"
