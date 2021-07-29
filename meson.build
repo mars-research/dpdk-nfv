@@ -107,7 +107,7 @@ cpp_link_with = [
 ]
 
 # Declare executables.
-foreach burst_size : ['4', '8', '16', '32']
+foreach burst_size : ['1', '4', '8', '16', '32']
     cpp_args = ['-DBURST_SIZE=' + burst_size]
     executable('nfv-notrampoline-' + burst_size,
         sources,
