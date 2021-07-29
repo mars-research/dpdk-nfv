@@ -1,9 +1,11 @@
 #!/bin/bash
 set -euo pipefail
-OUTFILE="$(date +"%m-%d-%H-%M-%S")_out"
+OUTDIR="log"
+OUTFILE="${OUTDIR}/$(date +"%m-%d-%H-%M-%S")_out"
 BUILD_DIR=build/
 NO_SIMD_BUILD_DIR=build_no_simd/
 
+mkdir -p ${OUTDIR}
 ninja -C ${BUILD_DIR}
 ninja -C ${NO_SIMD_BUILD_DIR}
 

@@ -51,12 +51,14 @@ extern "C" {
 #include "../user-trampoline/rt.h"
 }
 
-constexpr size_t MAX_PKT_BURST = BURST_SIZE;
-static_assert((MAX_PKT_BURST % 4 == 0) || (MAX_PKT_BURST == 1), 
+static_assert((BATCH_SIZE % 4 == 0) || (BATCH_SIZE == 1), 
     "rte_rx_burst limitation: 'Some drivers using vector instructions require that *nb_pkts* is "
     "divisible by 4 or 8, depending on the driver implementation.' "
-    "We also support sending one packet at a time."
+    "We also support `BATCH_SIZE` by receiving a batch of 4 but processing one packet at a time."
     "https://github.com/DPDK/dpdk/blob/02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/rte_ethdev.h#L4954-L4956)");
+/// Maximun number of packets per RX burst.
+/// If the `BATCH_SIZE` is one, we receive a burst of 4 but process one packet at a time.
+constexpr size_t MAX_PKT_BURST = (BATCH_SIZE == 1) ? 4 : BATCH_SIZE;
 
 static volatile bool force_quit;
 
@@ -287,7 +289,13 @@ static void l2fwd_main_loop(void) {
 
       // Apply network functions.
       const auto begin = _rdtsc();
-      run_nfs(eth_hdrs_burst, nb_rx);
+      if constexpr(MAX_PKT_BURST == 1) {
+        for (int i = 0; i < nb_rx; i++) {
+          run_nfs(eth_hdrs_burst + i, 1);
+        }
+      } else {
+        run_nfs(eth_hdrs_burst, nb_rx);
+      }
       unsigned int UNUSED;
       const auto end = _rdtscp(&UNUSED);
       port_statistics[portid].cycles_processed += end - begin;

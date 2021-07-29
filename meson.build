@@ -21,18 +21,6 @@ cpp_args = [
     '-Wno-deprecated-declarations'
 ]
 
-# Propagate meson flags to compilers. 
-# burst_size = get_option('burst_size')
-# assert(burst_size % 4 == 0, '''
-#     Some drivers using vector instructions require that *nb_pkts* is
-#     divisible by 4 or 8, depending on the driver implementation.
-#     https://github.com/DPDK/dpdk/blob/02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/rte_ethdev.h#L4954-L4956
-# ''')
-# cpp_args += [
-#     '-DBURST_SIZE=' + get_option('burst_size').to_string()
-# ]
-
-
 # Pass args to compiler.
 add_project_arguments(cpp_args, language: 'cpp')
 
@@ -114,9 +102,9 @@ if get_option('simd')
 else
     name_postfix = '_no_simd'
 endif
-foreach burst_size : ['1', '4', '8', '16', '32']
-    cpp_args = ['-DBURST_SIZE=' + burst_size]
-    executable('nfv-notrampoline-' + burst_size,
+foreach batch_size : ['1', '4', '8', '16', '32']
+    cpp_args = ['-DBATCH_SIZE=' + batch_size]
+    executable('nfv-notrampoline-' + batch_size,
         sources,
         dependencies: cpp_dependencies,
         include_directories: include_directories,
@@ -125,7 +113,7 @@ foreach burst_size : ['1', '4', '8', '16', '32']
         ],
         cpp_args: cpp_args + ['-DNAME=notrampoline' + name_postfix]
     )
-    executable('nfv-nofxsave-' + burst_size,
+    executable('nfv-nofxsave-' + batch_size,
         sources,
         dependencies: cpp_dependencies,
         include_directories: include_directories,
@@ -134,7 +122,7 @@ foreach burst_size : ['1', '4', '8', '16', '32']
         ],
         cpp_args: cpp_args + ['-DNAME=nofxsave' + name_postfix]
     )
-    executable('nfv-fxsave-' + burst_size,
+    executable('nfv-fxsave-' + batch_size,
         sources,
         dependencies: cpp_dependencies,
         include_directories: include_directories,
@@ -143,7 +131,7 @@ foreach burst_size : ['1', '4', '8', '16', '32']
         ],
         cpp_args: cpp_args + ['-DNAME=fxsave' + name_postfix]
     )
-    executable('nfv-rust-' + burst_size,
+    executable('nfv-rust-' + batch_size,
         sources,
         include_directories: include_directories,
         dependencies: rust_dependencies,
