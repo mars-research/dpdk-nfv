@@ -52,6 +52,11 @@ extern "C" {
 }
 
 constexpr size_t MAX_PKT_BURST = BURST_SIZE;
+static_assert((MAX_PKT_BURST % 4 == 0) || (MAX_PKT_BURST == 1), 
+    "rte_rx_burst limitation: 'Some drivers using vector instructions require that *nb_pkts* is "
+    "divisible by 4 or 8, depending on the driver implementation.' "
+    "We also support sending one packet at a time."
+    "https://github.com/DPDK/dpdk/blob/02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/rte_ethdev.h#L4954-L4956)");
 
 static volatile bool force_quit;
 

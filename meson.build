@@ -22,15 +22,15 @@ cpp_args = [
 ]
 
 # Propagate meson flags to compilers. 
-burst_size = get_option('burst_size')
-assert(burst_size % 4 == 0, '''
-    Some drivers using vector instructions require that *nb_pkts* is
-    divisible by 4 or 8, depending on the driver implementation.
-    https://github.com/DPDK/dpdk/blob/02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/rte_ethdev.h#L4954-L4956
-''')
-cpp_args += [
-    '-DBURST_SIZE=' + get_option('burst_size').to_string()
-]
+# burst_size = get_option('burst_size')
+# assert(burst_size % 4 == 0, '''
+#     Some drivers using vector instructions require that *nb_pkts* is
+#     divisible by 4 or 8, depending on the driver implementation.
+#     https://github.com/DPDK/dpdk/blob/02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/rte_ethdev.h#L4954-L4956
+# ''')
+# cpp_args += [
+#     '-DBURST_SIZE=' + get_option('burst_size').to_string()
+# ]
 
 
 # Pass args to compiler.
@@ -107,33 +107,40 @@ cpp_link_with = [
 ]
 
 # Declare executables.
-executable('nfv-notrampoline',
-    sources,
-    dependencies: cpp_dependencies,
-    include_directories: include_directories,
-    link_with: cpp_link_with + [
-        libtrampoline_no_trampoline,
-    ]
-)
-executable('nfv-nofxsave',
-    sources,
-    dependencies: cpp_dependencies,
-    include_directories: include_directories,
-    link_with: cpp_link_with + [
-        libtrampoline_no_fxsave,
-    ]
-)
-executable('nfv-fxsave',
-    sources,
-    dependencies: cpp_dependencies,
-    include_directories: include_directories,
-    link_with: cpp_link_with + [
-        libtrampoline_fxsave,
-    ]
-)
-executable('nfv-rust',
-    sources,
-    include_directories: include_directories,
-    dependencies: rust_dependencies,
-    link_with: rust_nfv_lib,
-)
+foreach burst_size : ['4', '8', '16', '32']
+    cpp_args = ['-DBURST_SIZE=' + burst_size]
+    executable('nfv-notrampoline-' + burst_size,
+        sources,
+        dependencies: cpp_dependencies,
+        include_directories: include_directories,
+        link_with: cpp_link_with + [
+            libtrampoline_no_trampoline,
+        ],
+        cpp_args: cpp_args
+    )
+    executable('nfv-nofxsave' + burst_size,
+        sources,
+        dependencies: cpp_dependencies,
+        include_directories: include_directories,
+        link_with: cpp_link_with + [
+            libtrampoline_no_fxsave,
+        ],
+        cpp_args: cpp_args
+    )
+    executable('nfv-fxsave' + burst_size,
+        sources,
+        dependencies: cpp_dependencies,
+        include_directories: include_directories,
+        link_with: cpp_link_with + [
+            libtrampoline_fxsave,
+        ],
+        cpp_args: cpp_args
+    )
+    executable('nfv-rust' + burst_size,
+        sources,
+        include_directories: include_directories,
+        dependencies: rust_dependencies,
+        link_with: rust_nfv_lib,
+        cpp_args: cpp_args
+    )
+endforeach
