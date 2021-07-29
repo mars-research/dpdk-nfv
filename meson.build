@@ -67,7 +67,9 @@ if not get_option('simd')
     # We don't add it to the entire project. Main uses STD, which uses SIMD.
     #add_project_arguments(simd_disabling_args, language: 'cpp')
 
-    rust_target = ['--target', rust_src_path + '/x86_64-unknown-linux-gnu-nosimd.json', '-Zbuild-std']
+    rust_target = ['--target', rust_src_path + '/x86_64-unknown-linux-gnu-nosimd.json']
+else
+    rust_target = ['--target', rust_src_path + '/x86_64-unknown-linux-gnu.json']
 endif
 
 # Load subdirectories.
@@ -80,7 +82,7 @@ rust_nfv_lib = custom_target(
   'rust_nfv',
   output: 'librust_nfv.a',
   build_always_stale: true,
-  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build'] + rust_target + ['--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
+  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build'] + rust_target + ['-Zbuild-std', '--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
 )
 
 # Find common dependencies.
