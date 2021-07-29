@@ -912,7 +912,7 @@ int main(int argc, char **argv) {
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-  printf("%s, %lu, %lu\n", TOSTRING(NAME), MAX_PKT_BURST, last_throughput);
+  printf("%s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_throughput);
 
   return ret;
 }
