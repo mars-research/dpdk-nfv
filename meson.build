@@ -116,31 +116,31 @@ foreach burst_size : ['1', '4', '8', '16', '32']
         link_with: cpp_link_with + [
             libtrampoline_no_trampoline,
         ],
-        cpp_args: cpp_args
+        cpp_args: cpp_args + ['-DNAME=notramp']
     )
-    executable('nfv-nofxsave' + burst_size,
+    executable('nfv-nofxsave-' + burst_size,
         sources,
         dependencies: cpp_dependencies,
         include_directories: include_directories,
         link_with: cpp_link_with + [
             libtrampoline_no_fxsave,
         ],
-        cpp_args: cpp_args
+        cpp_args: cpp_args + ['-DNAME=nofxsave']
     )
-    executable('nfv-fxsave' + burst_size,
+    executable('nfv-fxsave-' + burst_size,
         sources,
         dependencies: cpp_dependencies,
         include_directories: include_directories,
         link_with: cpp_link_with + [
             libtrampoline_fxsave,
         ],
-        cpp_args: cpp_args
+        cpp_args: cpp_args + ['-DNAME=fxsave']
     )
-    executable('nfv-rust' + burst_size,
+    executable('nfv-rust-' + burst_size,
         sources,
         include_directories: include_directories,
         dependencies: rust_dependencies,
         link_with: rust_nfv_lib,
-        cpp_args: cpp_args
+        cpp_args: cpp_args + ['-DNAME=rust']
     )
 endforeach
