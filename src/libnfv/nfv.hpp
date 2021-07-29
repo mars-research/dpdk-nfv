@@ -13,8 +13,10 @@ class NetworkFunction {
 
  public:
   virtual void process_frames(const std::span<rte_ether_hdr*> packets) = 0;
-  virtual ~NetworkFunction() {}
+  virtual void report() {}
+  virtual ~NetworkFunction() = default;
 };
 
 extern "C" void init_nfs();
 extern "C" void run_nfs(rte_ether_hdr** packets, uint64_t pkt_len);
+extern "C" void report_nfs();

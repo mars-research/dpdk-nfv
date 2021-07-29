@@ -60,3 +60,7 @@ pub unsafe extern "C" fn run_nfs(packets: *const *mut u8, num_pkt: u64) {
         nf.process_frames(&mut PACKETS[..]);
     }
 }
+
+
+#[no_mangle]
+pub unsafe extern "C" fn report_nfs() {}

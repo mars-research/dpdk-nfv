@@ -53,3 +53,7 @@ void NF2OneWayNat::_process_frames(const std::span<rte_ether_hdr *> packets) {
     }
   }
 }
+
+void NF2OneWayNat::report() {
+  printf("nf2: size %lu capacity %lu\n", this->port_hash_.size(), this->port_hash_.capacity());
+}

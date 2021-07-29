@@ -24,4 +24,5 @@ class NF2OneWayNat : public NetworkFunction {
   NF2OneWayNat();
 
   void process_frames(const std::span<rte_ether_hdr*> packets) override;
+  void report() override;
 };

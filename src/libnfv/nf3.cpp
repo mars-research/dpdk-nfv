@@ -62,3 +62,7 @@ void NF3Acl::_process_frames(const std::span<rte_ether_hdr *> packets) {
     // return false;
   }
 }
+
+void NF3Acl::report() {
+  printf("nf3: size %lu capacity %lu\n", this->flow_cache_.size(), this->flow_cache_.capacity());
+}

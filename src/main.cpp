@@ -176,6 +176,10 @@ static void print_stats(void) {
          "\nTotal packets dropped: %15" PRIu64,
          total_packets_tx, total_packets_rx, total_packets_dropped);
   printf("\n====================================================\n");
+  printf("\nNetwork function status ===============================\n");
+  report_nfs();
+  printf("====================================================\n");
+
 
   fflush(stdout);
 }

@@ -32,4 +32,5 @@ class NF3Acl : public NetworkFunction {
   NF3Acl(const std::vector<Acl> acls);
 
   void process_frames(const std::span<rte_ether_hdr *> packets) override;
+  void report() override;
 };

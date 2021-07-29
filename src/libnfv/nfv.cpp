@@ -32,3 +32,9 @@ extern "C" void run_nfs(rte_ether_hdr **packets, uint64_t pkt_len) {
     nf->process_frames(packets_span);
   }
 }
+
+extern "C" void report_nfs() {
+  for (auto &&nf : NFS) {
+    nf->report();
+  }
+}
