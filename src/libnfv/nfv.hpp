@@ -5,8 +5,6 @@
 #include <rte_ether.h>
 #include <rte_mbuf.h>
 
-constexpr size_t MAX_PKT_BURST = 32;
-
 class NetworkFunction {
  private:
   virtual void _process_frames(const std::span<rte_ether_hdr*> packets) = 0;

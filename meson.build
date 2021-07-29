@@ -9,6 +9,7 @@ project('dpdk-nfv', ['c', 'cpp'], default_options: [
 )
 rust_src_path = meson.source_root() + '/rust-nfv/'
 
+# Set global flags.
 cpp_args = [
     '-ggdb',
     '-g3',
@@ -19,6 +20,24 @@ cpp_args = [
     '-Wno-error=pedantic',
     '-Wno-deprecated-declarations'
 ]
+
+# Propagate meson flags to compilers. 
+burst_size = get_option('burst_size')
+assert(burst_size % 4 == 0, '''
+    Some drivers using vector instructions require that *nb_pkts* is
+    divisible by 4 or 8, depending on the driver implementation.
+    https://github.com/DPDK/dpdk/blob/02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/rte_ethdev.h#L4954-L4956
+''')
+cpp_args += [
+    '-DBURST_SIZE=' + get_option('burst_size').to_string()
+]
+
+
+# Pass args to compiler.
+add_project_arguments(cpp_args, language: 'cpp')
+
+
+# Add SIMD disabling flags if simd is false.
 rust_target = []
 if not get_option('simd')
     simd_disabling_args = [
@@ -51,18 +70,11 @@ if not get_option('simd')
     rust_target = ['--target', rust_src_path + '/x86_64-unknown-linux-gnu-nosimd.json', '-Zbuild-std']
 endif
 
+# Load subdirectories.
 sources = []
 subdir('src')
 
-cpp = meson.get_compiler('cpp')
-
-dependencies = [
-    cpp.find_library('pthread'),
-    cpp.find_library('dl'),
-    dependency('libdpdk'),
-    #dependency('papi'),
-]
-
+# Build librust_nfv.
 cargo = find_program('cargo')
 rust_nfv_lib = custom_target(
   'rust_nfv',
@@ -70,8 +82,18 @@ rust_nfv_lib = custom_target(
   build_always_stale: true,
   command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build'] + rust_target + ['--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
 )
+
+# Find common dependencies.
+cpp = meson.get_compiler('cpp')
+dependencies = [
+    cpp.find_library('pthread'),
+    cpp.find_library('dl'),
+    dependency('libdpdk'),
+    #dependency('papi'),
+]
 rust_dependencies = dependencies
 
+# Find cpp dependencies.
 cpp_dependencies = dependencies + [
     dependency('boost'),
 ]
@@ -80,15 +102,16 @@ include_directories = [
     libnfv_inc,
     libtrampoline_inc,
 ]
-link_with = [
+cpp_link_with = [
     libnfv,
 ]
 
+# Declare executables.
 executable('nfv-notrampoline',
     sources,
     dependencies: cpp_dependencies,
     include_directories: include_directories,
-    link_with: link_with + [
+    link_with: cpp_link_with + [
         libtrampoline_no_trampoline,
     ]
 )
@@ -96,7 +119,7 @@ executable('nfv-nofxsave',
     sources,
     dependencies: cpp_dependencies,
     include_directories: include_directories,
-    link_with: link_with + [
+    link_with: cpp_link_with + [
         libtrampoline_no_fxsave,
     ]
 )
@@ -104,7 +127,7 @@ executable('nfv-fxsave',
     sources,
     dependencies: cpp_dependencies,
     include_directories: include_directories,
-    link_with: link_with + [
+    link_with: cpp_link_with + [
         libtrampoline_fxsave,
     ]
 )

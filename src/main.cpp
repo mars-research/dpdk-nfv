@@ -51,6 +51,8 @@ extern "C" {
 #include "../user-trampoline/rt.h"
 }
 
+constexpr size_t MAX_PKT_BURST = BURST_SIZE;
+
 static volatile bool force_quit;
 
 /* MAC updating enabled by default */

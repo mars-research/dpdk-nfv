@@ -1,2 +1,2 @@
-option('packet_burst_size', type : 'combo', choices : ['cpp', 'rust'], value : 'cpp')
+option('burst_size', type : 'integer', min: 1, value : 32)
 option('simd', type : 'boolean', value : true)
