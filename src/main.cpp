@@ -125,9 +125,13 @@ struct l2fwd_port_statistics last_port_statistics[RTE_MAX_ETHPORTS];
 #define MAX_TIMER_PERIOD 86400 /* 1 day max */
 /* A tsc-based timer responsible for triggering statistics printout */
 static uint64_t timer_period = 10; /* default period is 10 seconds */
+static uint64_t timer_period_elapsed = 0;
+static uint64_t max_timer_period = std::numeric_limits<uint64_t>::max(); /* default period is 10 seconds */
 /* Time of last print_stats */
 std::chrono::steady_clock::time_point last_print_stats_time =
     std::chrono::steady_clock::now();
+
+static uint64_t last_throughput = 0;
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
@@ -160,13 +164,15 @@ static void print_stats(void) {
     const auto processed_delta = stat.processed - last_stat.processed;
     const auto cycles_processed_delta =
         stat.cycles_processed - last_stat.cycles_processed;
+    const auto throughput = processed_delta / duration.count();
+    last_throughput = throughput;
 
     std::cout << "\nStatistics for port " << portid
               << " ------------------------------"
               << "\nPackets sent: " << port_statistics[portid].tx
               << "\nPackets received: " << port_statistics[portid].rx
               << "\nPackets dropped: " << port_statistics[portid].dropped
-              << "\nProcessing speed: " << processed_delta / duration.count()
+              << "\nThroughput: " << throughput
               << " packets/second"
               << "\nProcessing speed: "
               << (double)cycles_processed_delta / std::max(1ul, processed_delta)
@@ -255,6 +261,7 @@ static void l2fwd_main_loop(void) {
             print_stats();
             /* reset the timer */
             timer_tsc = 0;
+            timer_period_elapsed++;
           }
         }
       }
@@ -291,7 +298,8 @@ static void l2fwd_main_loop(void) {
       // We drop the packets if tx is not able to keep up with the rate
       // assert(nb_tx == nb_rx);
       port_statistics[portid].tx += nb_tx;
-    }
+    } 
+    force_quit |= (timer_period_elapsed > max_timer_period);
   }
 }
 
@@ -305,6 +313,7 @@ static void l2fwd_usage(const char *prgname) {
   printf(
       "%s [EAL options] -- -p PORTMASK [-q NQ]\n"
       "  -p PORTMASK: hexadecimal bitmask of ports to configure\n"
+      "  -t MAX_PERIOD: number of timer period elapsed before exit\n"
       "  -q NQ: number of queue (=ports) per lcore (default is 1)\n"
       "  -T PERIOD: statistics will be refreshed each PERIOD seconds (0 to "
       "disable, 10 default, 86400 maximum)\n"
@@ -473,6 +482,16 @@ static int l2fwd_parse_args(int argc, char **argv) {
         return -1;
       }
       timer_period = timer_secs;
+      break;
+
+    /* timer period */
+    case 't':
+      max_timer_period = l2fwd_parse_timer_period(optarg);
+      if (max_timer_period < 0) {
+        printf("invalid max timer period\n");
+        l2fwd_usage(prgname);
+        return -1;
+      }
       break;
 
     /* long options */
@@ -881,6 +900,10 @@ int main(int argc, char **argv) {
   /* clean up the EAL */
   rte_eal_cleanup();
   printf("Bye...\n");
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+  printf("%s, %lu, %lu\n", TOSTRING(NAME), MAX_PKT_BURST, last_throughput);
 
   return ret;
 }

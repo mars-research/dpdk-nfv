@@ -107,6 +107,11 @@ cpp_link_with = [
 ]
 
 # Declare executables.
+if get_option('simd')
+    name_postfix = ''
+else
+    name_postfix = '_no_simd'
+endif
 foreach burst_size : ['1', '4', '8', '16', '32']
     cpp_args = ['-DBURST_SIZE=' + burst_size]
     executable('nfv-notrampoline-' + burst_size,
@@ -116,7 +121,7 @@ foreach burst_size : ['1', '4', '8', '16', '32']
         link_with: cpp_link_with + [
             libtrampoline_no_trampoline,
         ],
-        cpp_args: cpp_args + ['-DNAME=notramp']
+        cpp_args: cpp_args + ['-DNAME=notrampoline' + name_postfix]
     )
     executable('nfv-nofxsave-' + burst_size,
         sources,
@@ -125,7 +130,7 @@ foreach burst_size : ['1', '4', '8', '16', '32']
         link_with: cpp_link_with + [
             libtrampoline_no_fxsave,
         ],
-        cpp_args: cpp_args + ['-DNAME=nofxsave']
+        cpp_args: cpp_args + ['-DNAME=nofxsave' + name_postfix]
     )
     executable('nfv-fxsave-' + burst_size,
         sources,
@@ -134,13 +139,13 @@ foreach burst_size : ['1', '4', '8', '16', '32']
         link_with: cpp_link_with + [
             libtrampoline_fxsave,
         ],
-        cpp_args: cpp_args + ['-DNAME=fxsave']
+        cpp_args: cpp_args + ['-DNAME=fxsave' + name_postfix]
     )
     executable('nfv-rust-' + burst_size,
         sources,
         include_directories: include_directories,
         dependencies: rust_dependencies,
         link_with: rust_nfv_lib,
-        cpp_args: cpp_args + ['-DNAME=rust']
+        cpp_args: cpp_args + ['-DNAME=rust' + name_postfix]
     )
 endforeach
