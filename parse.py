@@ -16,7 +16,9 @@ for line in content:
   m[row][col] = val
 
 row_header = m.keys()
-col_header = set(itertools.chain.from_iterable(map(dict.keys, m.values())))
+col_header = ['batch_size'] + list(set(itertools.chain.from_iterable(map(dict.keys, m.values()))))
+for r in row_header:
+  m[r]['batch_size'] = r
 with open(sys.argv[1] + '.csv', 'w') as f:
   writer = csv.DictWriter(f, col_header)
   writer.writeheader()
