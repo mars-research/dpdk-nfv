@@ -14,6 +14,17 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <setjmp.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/queue.h>
+#include <sys/types.h>
+
 #include <rte_atomic.h>
 #include <rte_branch_prediction.h>
 #include <rte_common.h>
@@ -35,29 +46,24 @@
 #include <rte_prefetch.h>
 #include <rte_random.h>
 #include <rte_string_fns.h>
-#include <setjmp.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/queue.h>
-#include <sys/types.h>
 
 #include "nfv.hpp"
 extern "C" {
 #include "../user-trampoline/rt.h"
 }
 
-static_assert((BATCH_SIZE % 4 == 0) || (BATCH_SIZE == 1), 
-    "rte_rx_burst limitation: 'Some drivers using vector instructions require that *nb_pkts* is "
-    "divisible by 4 or 8, depending on the driver implementation.' "
-    "We also support `BATCH_SIZE` by receiving a batch of 4 but processing one packet at a time."
-    "https://github.com/DPDK/dpdk/blob/02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/rte_ethdev.h#L4954-L4956)");
+static_assert((BATCH_SIZE % 4 == 0) || (BATCH_SIZE == 1),
+              "rte_rx_burst limitation: 'Some drivers using vector "
+              "instructions require that *nb_pkts* is "
+              "divisible by 4 or 8, depending on the driver implementation.' "
+              "We also support `BATCH_SIZE` by receiving a batch of 4 but "
+              "processing one packet at a time."
+              "https://github.com/DPDK/dpdk/blob/"
+              "02e077f35dbc9821dfcb32714ad1096a3ee58d08/lib/ethdev/"
+              "rte_ethdev.h#L4954-L4956)");
 /// Maximun number of packets per RX burst.
-/// If the `BATCH_SIZE` is one, we receive a burst of 4 but process one packet at a time.
+/// If the `BATCH_SIZE` is one, we receive a burst of 4 but process one packet
+/// at a time.
 constexpr size_t MAX_PKT_BURST = (BATCH_SIZE == 1) ? 4 : BATCH_SIZE;
 
 static volatile bool force_quit;
@@ -128,7 +134,8 @@ struct l2fwd_port_statistics last_port_statistics[RTE_MAX_ETHPORTS];
 /* A tsc-based timer responsible for triggering statistics printout */
 static uint64_t timer_period = 10; /* default period is 10 seconds */
 static uint64_t timer_period_elapsed = 0;
-static uint64_t max_timer_period = std::numeric_limits<uint64_t>::max(); /* default period is 10 seconds */
+static uint64_t max_timer_period =
+    std::numeric_limits<uint64_t>::max(); /* default period is 10 seconds */
 /* Time of last print_stats */
 std::chrono::steady_clock::time_point last_print_stats_time =
     std::chrono::steady_clock::now();
@@ -174,8 +181,7 @@ static void print_stats(void) {
               << "\nPackets sent: " << port_statistics[portid].tx
               << "\nPackets received: " << port_statistics[portid].rx
               << "\nPackets dropped: " << port_statistics[portid].dropped
-              << "\nThroughput: " << throughput
-              << " packets/second"
+              << "\nThroughput: " << throughput << " packets/second"
               << "\nProcessing speed: "
               << (double)cycles_processed_delta / std::max(1ul, processed_delta)
               << " cycles/packet";
@@ -194,7 +200,6 @@ static void print_stats(void) {
   printf("\nNetwork function status ===============================\n");
   report_nfs();
   printf("====================================================\n");
-
 
   fflush(stdout);
 }
@@ -289,7 +294,7 @@ static void l2fwd_main_loop(void) {
 
       // Apply network functions.
       const auto begin = _rdtsc();
-      if constexpr(BATCH_SIZE == 1) {
+      if constexpr (BATCH_SIZE == 1) {
         for (int i = 0; i < nb_rx; i++) {
           run_nfs(eth_hdrs_burst + i, 1);
         }
@@ -306,7 +311,7 @@ static void l2fwd_main_loop(void) {
       // We drop the packets if tx is not able to keep up with the rate
       // assert(nb_tx == nb_rx);
       port_statistics[portid].tx += nb_tx;
-    } 
+    }
     force_quit |= (timer_period_elapsed > max_timer_period);
   }
 }
@@ -792,7 +797,8 @@ int main(int argc, char **argv) {
                portid, strerror(-ret));
 
     if (!(dev_info.tx_offload_capa & DEV_TX_OFFLOAD_IPV4_CKSUM))
-      rte_exit(EXIT_FAILURE, "Cannot support checksum offload: port=%u\n", portid);
+      rte_exit(EXIT_FAILURE, "Cannot support checksum offload: port=%u\n",
+               portid);
 
     if (dev_info.tx_offload_capa & DEV_TX_OFFLOAD_MBUF_FAST_FREE)
       local_port_conf.txmode.offloads |= DEV_TX_OFFLOAD_MBUF_FAST_FREE;
