@@ -79,14 +79,13 @@ dependencies = [
     cpp.find_library('pthread'),
     cpp.find_library('dl'),
     dependency('libdpdk'),
+    dependency('absl_flags', default_options: ['werror=false', 'warning_level=1', 'debug=true']),
     #dependency('papi'),
 ]
 rust_dependencies = dependencies
 
 # Find cpp dependencies.
-cpp_dependencies = dependencies + [
-    dependency('boost'),
-]
+cpp_dependencies = dependencies + []
 
 include_directories = [
     libnfv_inc,
