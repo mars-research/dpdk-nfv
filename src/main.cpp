@@ -146,6 +146,7 @@ struct l2fwd_port_statistics port_statistics[RTE_MAX_ETHPORTS];
 struct l2fwd_port_statistics last_port_statistics[RTE_MAX_ETHPORTS];
 
 static uint64_t last_throughput = 0;
+static uint64_t last_latency = 0;
 
 /* Print out statistics on packets dropped */
 static void print_stats(void) {
@@ -188,6 +189,8 @@ static void print_stats(void) {
         stat.cycles_processed - last_stat.cycles_processed;
     const auto throughput = processed_delta / duration.count();
     last_throughput = throughput;
+    const auto latency = (double)cycles_processed_delta / std::max(1ul, processed_delta);
+    last_latency = latency;
 
     std::cout << "\nStatistics for port " << portid
               << " ------------------------------"
@@ -196,7 +199,7 @@ static void print_stats(void) {
               << "\nPackets dropped: " << port_statistics[portid].dropped
               << "\nThroughput: " << throughput << " packets/second"
               << "\nProcessing speed: "
-              << (double)cycles_processed_delta / std::max(1ul, processed_delta)
+              << latency
               << " cycles/packet";
 
     total_packets_dropped += port_statistics[portid].dropped;
@@ -726,7 +729,8 @@ int main(int argc, char **argv) {
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-  printf("%s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_throughput);
+  printf("throughput, %s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_throughput);
+  printf("latency, %s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_latency);
 
   return ret;
 }

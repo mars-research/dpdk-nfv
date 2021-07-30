@@ -65,7 +65,6 @@ sources = []
 subdir('src')
 
 # Build librust_nfv.
-cargo = find_program('cargo')
 rust_nfv_lib = custom_target(
   'rust_nfv',
   output: 'librust_nfv.a',
