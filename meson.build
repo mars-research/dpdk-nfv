@@ -70,7 +70,7 @@ rust_nfv_lib = custom_target(
   'rust_nfv',
   output: 'librust_nfv.a',
   build_always_stale: true,
-  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build'] + rust_target + ['-Zbuild-std', '--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Z', 'unstable-options'],
+  command: ['env', 'RUSTFLAGS=-C target-cpu=native', 'cargo', 'build'] + rust_target + ['-Zbuild-std', '--manifest-path', rust_src_path + '/Cargo.toml', '--release', '--out-dir', '.', '-Zunstable-options', '--color', 'always'],
 )
 
 # Find common dependencies.
