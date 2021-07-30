@@ -15,6 +15,6 @@ class NetworkFunction {
   virtual ~NetworkFunction() = default;
 };
 
-extern "C" void init_nfs();
+extern "C" void init_nfs(uint8_t *nfs, uint64_t len);
 extern "C" void run_nfs(rte_ether_hdr** packets, uint64_t pkt_len);
 extern "C" void report_nfs();

@@ -30,6 +30,8 @@
 #include <sys/types.h>
 #include <tuple>
 #include <vector>
+#include <functional>
+#include <unordered_set>
 
 #include <rte_atomic.h>
 #include <rte_branch_prediction.h>
@@ -58,8 +60,10 @@ extern "C" {
 #include "../user-trampoline/rt.h"
 }
 
-// FLAGS_FLAG(std::vector<uint8_t>, network_functions, std::vector{1, 2, 3, 4},
-// "A list of network functions enabled.");
+
+const std::vector<std::string> default_nfs = {"1", "2", "3", "4"};
+ABSL_FLAG(std::vector<std::string>, network_functions, default_nfs,
+"A list of network functions enabled.");
 ABSL_FLAG(uint64_t, timer_period, 10,
           "Frequency of invocation of `print_stats` in seconds.");
 ABSL_FLAG(uint64_t, max_timer_period, std::numeric_limits<uint64_t>::max(),
@@ -242,7 +246,12 @@ static void l2fwd_main_loop(void) {
 
   RTE_LOG(INFO, L2FWD, "initializing network functions on lcore %u\n",
           lcore_id);
-  init_nfs();
+  // Parse flag.
+  const auto network_functions_str = absl::GetFlag(FLAGS_network_functions);
+  std::vector<uint8_t> network_functions;
+  std::transform(network_functions_str.begin(), network_functions_str.end(), std::back_insert_iterator(network_functions),
+    [](const auto& str) { return std::stoi(str); });
+  init_nfs(network_functions.data(), network_functions.size());
 
   RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
 

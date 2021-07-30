@@ -19,21 +19,26 @@ static mut PACKETS: Vec<Packet> = vec![];
 static mut NFS: Vec<Box<dyn nfv::NetworkFunction>> = vec![];
 
 #[no_mangle]
-pub unsafe extern "C" fn init_nfs() {
+pub unsafe extern "C" fn init_nfs(nfs: *const u8, len: u64) {
+    let len = len as usize;
     PACKETS.reserve(MAX_PKT_BURST);
-    NFS = vec![
-        box nf1::Nf1DecrementTtl::new(),
-        box nf2::Nf2OneWayNat::new(),
-        box nf3::Nf3Acl::new(vec![nf3::Acl {
-            src_ip: Some(0),
-            dst_ip: None,
-            src_port: None,
-            dst_port: None,
-            established: None,
-            drop: false,
-        }]),
-        box nf4::Nf4Maglev::new(),
-    ];
+
+    for nf in std::slice::from_raw_parts(nfs, len) {
+        NFS.push(match nf {
+            1 => box nf1::Nf1DecrementTtl::new(),
+            2 => box nf2::Nf2OneWayNat::new(),
+            3 => box nf3::Nf3Acl::new(vec![nf3::Acl {
+                src_ip: Some(0),
+                dst_ip: None,
+                src_port: None,
+                dst_port: None,
+                established: None,
+                drop: false,
+            }]),
+            4 => box nf4::Nf4Maglev::new(),
+            default => panic!("Unknown nf: {}", nf),
+        })
+    }
 }
 
 // NF1 + NF2 = 9M

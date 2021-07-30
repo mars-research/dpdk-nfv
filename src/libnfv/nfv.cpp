@@ -12,18 +12,38 @@
 
 static std::vector<std::unique_ptr<NetworkFunction>> NFS;
 
-extern "C" void init_nfs() {
-  NFS.emplace_back(std::make_unique<NF1DecrementTtl>());
-  NFS.emplace_back(std::make_unique<NF2OneWayNat>());
-  NFS.emplace_back(std::make_unique<NF3Acl>(std::vector{Acl{
-    src_ip : 0,
-    dst_ip : {},
-    src_port : {},
-    dst_port : {},
-    established : {},
-    drop : false,
-  }}));
-  NFS.emplace_back(std::make_unique<NF4Maglev>());
+extern "C" void init_nfs(uint8_t *nfs, uint64_t len) {
+
+  for (const auto &nf : std::span<uint8_t>(nfs, len)) {
+    switch (nf) {
+    case 1:
+      NFS.emplace_back(std::make_unique<NF1DecrementTtl>());
+      break;
+
+    case 2:
+      NFS.emplace_back(std::make_unique<NF2OneWayNat>());
+      break;
+
+    case 3:
+      NFS.emplace_back(std::make_unique<NF3Acl>(std::vector{Acl{
+        src_ip : 0,
+        dst_ip : {},
+        src_port : {},
+        dst_port : {},
+        established : {},
+        drop : false,
+      }}));
+      break;
+
+    case 4:
+      NFS.emplace_back(std::make_unique<NF4Maglev>());
+      break;
+
+    default:
+      fprintf(stderr, "Bad nf %d\n", nf);
+      break;
+    }
+  }
 }
 
 extern "C" void run_nfs(rte_ether_hdr **packets, uint64_t pkt_len) {
