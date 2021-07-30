@@ -15,12 +15,6 @@ libnfv_dependencies = [
     dependency('absl_container', default_options: ['werror=false', 'cpp_args=' + ' '.join(cpp_args), 'warning_level=1', 'debug=true']),
 ]
 
-# Declare default options.
-libnfv_default_options =  [
-  'debug=true',
-  #'b_lto=true',
-]
-
 # Find nasm compiler
 nasm = find_program('nasm', required: false)
 if not nasm.found()
@@ -44,5 +38,4 @@ libnfv = static_library('nfv',
   include_directories: include_directories,
 	dependencies: libnfv_dependencies,
   link_with: link_with,
-	default_options: libnfv_default_options,
 )

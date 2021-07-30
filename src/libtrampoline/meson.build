@@ -10,12 +10,6 @@ libtrampoline_inc = include_directories(
 # Declare dependencies
 libtrampoline_dependencies = []
 
-# Declare default options.
-libtrampoline_default_options =  [
-  'debug=true',
-  #'b_lto=true',
-]
-
 # Find nasm compiler
 nasm = find_program('nasm', required: false)
 if not nasm.found()
@@ -69,7 +63,6 @@ libtrampoline_no_trampoline = static_library('trampoline_no_trampoline',
   include_directories: include_directories,
 	dependencies: libtrampoline_dependencies,
   link_with: link_with,
-	default_options: libtrampoline_default_options,
 )
 
 libtrampoline_no_fxsave = static_library('trampoline_no_fxsave',
@@ -77,7 +70,6 @@ libtrampoline_no_fxsave = static_library('trampoline_no_fxsave',
   include_directories: include_directories,
 	dependencies: libtrampoline_dependencies,
   link_with: link_with,
-	default_options: libtrampoline_default_options,
 )
 
 libtrampoline_fxsave = static_library('trampoline_fxsave',
@@ -85,6 +77,5 @@ libtrampoline_fxsave = static_library('trampoline_fxsave',
   include_directories: include_directories,
 	dependencies: libtrampoline_dependencies,
   link_with: link_with,
-	default_options: libtrampoline_default_options,
 )
 
