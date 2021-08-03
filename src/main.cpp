@@ -11,6 +11,7 @@
 #include <chrono>
 #include <ctype.h>
 #include <errno.h>
+#include <functional>
 #include <getopt.h>
 #include <inttypes.h>
 #include <iomanip>
@@ -29,9 +30,8 @@
 #include <sys/queue.h>
 #include <sys/types.h>
 #include <tuple>
-#include <vector>
-#include <functional>
 #include <unordered_set>
+#include <vector>
 #ifdef PAPI
 #include <papi.h>
 #endif
@@ -63,14 +63,15 @@ extern "C" {
 #include "../user-trampoline/rt.h"
 }
 
-
 const std::vector<std::string> default_nfs = {"1", "2", "3", "4"};
 ABSL_FLAG(std::vector<std::string>, network_functions, default_nfs,
-"A list of network functions enabled.");
+          "A list of network functions enabled.");
 ABSL_FLAG(uint64_t, timer_period, 10,
           "Frequency of invocation of `print_stats` in seconds.");
 ABSL_FLAG(uint64_t, max_timer_period, std::numeric_limits<uint64_t>::max(),
           "Maximum timer period elapsed before shutting down.");
+ABSL_FLAG(uint64_t, max_packets, std::numeric_limits<uint64_t>::max(),
+          "Number of packets processed before shutting down.");
 ABSL_FLAG(uint32_t, portmask, 0,
           "Hexadecimal bitmask of ports to configure/enable.");
 ABSL_FLAG(uint32_t, num_rx_queue, 1, "Number RX queue per lcore.");
@@ -192,7 +193,8 @@ static void print_stats(void) {
         stat.cycles_processed - last_stat.cycles_processed;
     const auto throughput = processed_delta / duration.count();
     last_throughput = throughput;
-    const auto latency = (double)cycles_processed_delta / std::max(1ul, processed_delta);
+    const auto latency =
+        (double)cycles_processed_delta / std::max(1ul, processed_delta);
     last_latency = latency;
 
     std::cout << "\nStatistics for port " << portid
@@ -201,9 +203,7 @@ static void print_stats(void) {
               << "\nPackets received: " << port_statistics[portid].rx
               << "\nPackets dropped: " << port_statistics[portid].dropped
               << "\nThroughput: " << throughput << " packets/second"
-              << "\nProcessing speed: "
-              << latency
-              << " cycles/packet";
+              << "\nProcessing speed: " << latency << " cycles/packet";
 
     total_packets_dropped += port_statistics[portid].dropped;
     total_packets_tx += port_statistics[portid].tx;
@@ -237,6 +237,7 @@ static void l2fwd_main_loop(void) {
   struct rte_eth_dev_tx_buffer *buffer;
   const uint64_t timer_period = absl::GetFlag(FLAGS_timer_period);
   const uint64_t max_timer_period = absl::GetFlag(FLAGS_max_timer_period);
+  const uint64_t max_packets = absl::GetFlag(FLAGS_max_packets);
   uint64_t timer_period_elapsed = 0;
 
   prev_tsc = 0;
@@ -255,8 +256,9 @@ static void l2fwd_main_loop(void) {
   // Parse flag.
   const auto network_functions_str = absl::GetFlag(FLAGS_network_functions);
   std::vector<uint8_t> network_functions;
-  std::transform(network_functions_str.begin(), network_functions_str.end(), std::back_insert_iterator(network_functions),
-    [](const auto& str) { return std::stoi(str); });
+  std::transform(network_functions_str.begin(), network_functions_str.end(),
+                 std::back_insert_iterator(network_functions),
+                 [](const auto &str) { return std::stoi(str); });
   init_nfs(network_functions.data(), network_functions.size());
 
   RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
@@ -321,10 +323,10 @@ static void l2fwd_main_loop(void) {
 
       // Apply network functions.
       const auto begin = _rdtsc();
-      #ifdef PAPI
+#ifdef PAPI
       int retval = PAPI_hl_region_begin("run_nfs");
       assert(retval == PAPI_OK);
-      #endif
+#endif
       if constexpr (BATCH_SIZE == 1) {
         for (int i = 0; i < nb_rx; i++) {
           run_nfs(eth_hdrs_burst + i, 1);
@@ -332,10 +334,10 @@ static void l2fwd_main_loop(void) {
       } else {
         run_nfs(eth_hdrs_burst, nb_rx);
       }
-      #ifdef PAPI
+#ifdef PAPI
       retval = PAPI_hl_region_end("run_nfs");
       assert(retval == PAPI_OK);
-      #endif
+#endif
       unsigned int UNUSED;
       const auto end = _rdtscp(&UNUSED);
       port_statistics[portid].cycles_processed += end - begin;
@@ -347,7 +349,10 @@ static void l2fwd_main_loop(void) {
       // assert(nb_tx == nb_rx);
       port_statistics[portid].tx += nb_tx;
     }
-    force_quit |= (timer_period_elapsed > max_timer_period);
+    if ((port_statistics[portid].tx > max_packets) ||
+        (timer_period_elapsed > max_timer_period)) {
+      force_quit = true;
+    }
   }
 }
 
@@ -740,7 +745,8 @@ int main(int argc, char **argv) {
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-  printf("throughput, %s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_throughput);
+  printf("throughput, %s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE,
+         last_throughput);
   printf("latency, %s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_latency);
 
   return ret;
