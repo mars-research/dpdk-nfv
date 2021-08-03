@@ -32,6 +32,9 @@
 #include <vector>
 #include <functional>
 #include <unordered_set>
+#ifdef PAPI
+#include <papi.h>
+#endif
 
 #include <rte_atomic.h>
 #include <rte_branch_prediction.h>
@@ -318,6 +321,10 @@ static void l2fwd_main_loop(void) {
 
       // Apply network functions.
       const auto begin = _rdtsc();
+      #ifdef PAPI
+      int retval = PAPI_hl_region_begin("run_nfs");
+      assert(retval == PAPI_OK);
+      #endif
       if constexpr (BATCH_SIZE == 1) {
         for (int i = 0; i < nb_rx; i++) {
           run_nfs(eth_hdrs_burst + i, 1);
@@ -325,6 +332,10 @@ static void l2fwd_main_loop(void) {
       } else {
         run_nfs(eth_hdrs_burst, nb_rx);
       }
+      #ifdef PAPI
+      retval = PAPI_hl_region_end("run_nfs");
+      assert(retval == PAPI_OK);
+      #endif
       unsigned int UNUSED;
       const auto end = _rdtscp(&UNUSED);
       port_statistics[portid].cycles_processed += end - begin;

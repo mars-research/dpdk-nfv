@@ -1,1 +1,2 @@
 option('simd', type : 'boolean', value : true)
+option('papi', type: 'boolean', value: false)

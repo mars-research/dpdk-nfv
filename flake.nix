@@ -29,7 +29,7 @@
       buildInputs = with pkgs; [
         dpdk
         libbsd
-        boost
+        papi
       ];
     };
 

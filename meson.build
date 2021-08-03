@@ -20,6 +20,9 @@ cpp_args = [
     '-Wno-error=pedantic',
     '-Wno-deprecated-declarations'
 ]
+if get_option('papi')
+    cpp_args += ['-DPAPI']
+endif
 
 # Pass args to compiler.
 add_project_arguments(cpp_args, language: 'cpp')
@@ -79,8 +82,10 @@ dependencies = [
     cpp.find_library('dl'),
     dependency('libdpdk'),
     dependency('absl_flags', default_options: ['werror=false', 'warning_level=1', 'debug=true']),
-    #dependency('papi'),
 ]
+if get_option('papi')
+    dependencies += [dependency('papi')]
+endif
 rust_dependencies = dependencies
 
 # Find cpp dependencies.
