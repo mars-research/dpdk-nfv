@@ -2,7 +2,7 @@
   description = "DPDK NFV tests";
 
   inputs = {
-    mars-std.url = "git+ssh://git@github.com/mars-research/mars-std";
+    mars-std.url = "github:mars-research/mars-std";
   };
 
   outputs = { self, mars-std, ... }: let
