@@ -4,3 +4,6 @@
 [submodule "rust-nfv/redleaf-nfv"]
 	path = rust-nfv/redleaf-nfv
 	url = git@github.com:mars-research/redleaf-nfv.git
+[submodule "FlameGraph"]
+	path = FlameGraph
+	url = https://github.com/brendangregg/FlameGraph.git

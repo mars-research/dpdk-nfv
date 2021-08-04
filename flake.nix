@@ -27,7 +27,7 @@
       ];
 
       buildInputs = with pkgs; [
-        dpdk
+        (dpdk.override { withExamples = [ "all" ]; })
         libbsd
         papi
       ];
