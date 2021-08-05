@@ -10,7 +10,7 @@ ninja -C ${BUILD_DIR}
 ninja -C ${NO_SIMD_BUILD_DIR}
 
 run() {
-  sudo ./$1/$2 -- --portmask=1 --max_timer_period=2 | tail -2 >> ${OUTFILE}
+  sudo ./$1/$2 -- --portmask=1 --max_timer_period=3 | tail -2 >> ${OUTFILE}
 }
 
 for name in 'notrampoline' 'nofxsave' 'fxsave' 'rust'
