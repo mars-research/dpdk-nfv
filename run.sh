@@ -6,7 +6,17 @@ BUILD_DIR=build/
 NO_SIMD_BUILD_DIR=build_no_simd/
 
 mkdir -p ${OUTDIR}
+
+if [ ! -d ${BUILD_DIR} ] 
+then
+    meson ${BUILD_DIR}
+fi
 ninja -C ${BUILD_DIR}
+
+if [ ! -d ${NO_SIMD_BUILD_DIR} ] 
+then
+    meson -Dsimd=false ${NO_SIMD_BUILD_DIR}
+fi
 ninja -C ${NO_SIMD_BUILD_DIR}
 
 run() {
