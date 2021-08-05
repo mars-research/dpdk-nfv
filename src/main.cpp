@@ -78,6 +78,7 @@ ABSL_FLAG(uint32_t, num_rx_queue, 1, "Number RX queue per lcore.");
 ABSL_FLAG(std::vector<std::string>, portmap, std::vector<std::string>{},
           "NOT implemented yet btw.\nConfigure forwarding port pair mapping. "
           "Default: alternate port pairs.");
+ABSL_FLAG(bool, offload_ipv4_checksum, true, "Enable hardware IPv4 checksum offloading.");
 
 static_assert((BATCH_SIZE % 4 == 0) || (BATCH_SIZE == 1),
               "rte_rx_burst limitation: 'Some drivers using vector "
@@ -466,9 +467,6 @@ static void signal_handler(int signum) {
 }
 
 int main(int argc, char **argv) {
-  // Enable TX checksum offloading
-  port_conf.txmode.offloads |= DEV_TX_OFFLOAD_IPV4_CKSUM;
-
   // Setup stdout
   std::cout.imbue(std::locale());
   std::cout << std::fixed;
@@ -502,13 +500,20 @@ int main(int argc, char **argv) {
   absl::SetProgramUsageMessage("$PROGRAM [EAL options] -- [program options]");
   absl::ParseCommandLine(argc, argv);
 
+  /* Get command line arguments */
   uint32_t l2fwd_enabled_port_mask = absl::GetFlag(FLAGS_portmask);
   const uint32_t l2fwd_rx_queue_per_lcore = absl::GetFlag(FLAGS_num_rx_queue);
   assert(l2fwd_rx_queue_per_lcore < MAX_RX_QUEUE_PER_LCORE);
+  const bool offload_ipv4_checksum = absl::GetFlag(FLAGS_offload_ipv4_checksum);
 
   /* convert to number of cycles */
   absl::SetFlag(&FLAGS_timer_period,
                 absl::GetFlag(FLAGS_timer_period) * rte_get_timer_hz());
+
+  // Enable TX checksum offloading
+  if (offload_ipv4_checksum) {
+    port_conf.txmode.offloads |= DEV_TX_OFFLOAD_IPV4_CKSUM;
+  }
 
   nb_ports = rte_eth_dev_count_avail();
   if (nb_ports == 0)
@@ -623,8 +628,8 @@ int main(int argc, char **argv) {
       rte_exit(EXIT_FAILURE, "Error during getting device (port %u) info: %s\n",
                portid, strerror(-ret));
 
-    if (!(dev_info.tx_offload_capa & DEV_TX_OFFLOAD_IPV4_CKSUM))
-      rte_exit(EXIT_FAILURE, "Cannot support checksum offload: port=%u\n",
+    if (offload_ipv4_checksum && !(dev_info.tx_offload_capa & DEV_TX_OFFLOAD_IPV4_CKSUM))
+      rte_exit(EXIT_FAILURE, "Device does not support IPv4 checksum offloading: port=%u\n",
                portid);
 
     if (dev_info.tx_offload_capa & DEV_TX_OFFLOAD_MBUF_FAST_FREE)
