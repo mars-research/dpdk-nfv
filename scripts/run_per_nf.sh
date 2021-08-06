@@ -32,7 +32,7 @@ do
     do
       bin_name="nfv-${name}-${burst}"
       run ${BUILD_DIR} ${bin_name} ${nf}
-      run ${NO_SIMD_BUILD_DIR} ${bin_name} ${nf}
+      #run ${NO_SIMD_BUILD_DIR} ${bin_name} ${nf}
     done
   done
 done

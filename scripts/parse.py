@@ -7,15 +7,14 @@ with open(sys.argv[1]) as f:
 
 latency = {}
 throughput = {}
-m = {
-  'latency': {},
-  'throughput': {},
-}
+m = {}
 
 for line in content:
   ty, col, row, val = tuple(map(str.strip, line.strip().split(',')))
   row = int(row)
   val = int(val)
+  if ty not in m:
+    m[ty] = {}
   ty_m = m[ty]
   if row not in ty_m:
     ty_m[row] = {}
