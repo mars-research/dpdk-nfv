@@ -19,7 +19,7 @@ for line in content:
   ty_m = m[ty]
   if row not in ty_m:
     ty_m[row] = {}
-  ty_m[row][col] = val
+  ty_m[row][col] = f'{val/1E6 : .2f}' if ty == 'throughput' else val
 
 col_headers = {}
 for ty in m:
