@@ -330,12 +330,8 @@ static void l2fwd_main_loop(void) {
       int retval = PAPI_hl_region_begin("run_nfs");
       assert(retval == PAPI_OK);
 #endif
-      if constexpr (BATCH_SIZE == 1) {
-        for (int i = 0; i < nb_rx; i++) {
-          run_nfs(eth_hdrs_burst + i, 1);
-        }
-      } else {
-        run_nfs(eth_hdrs_burst, nb_rx);
+      for (int i = 0; i < nb_rx; i += BATCH_SIZE) {
+        run_nfs(eth_hdrs_burst + i, BATCH_SIZE);
       }
 #ifdef PAPI
       retval = PAPI_hl_region_end("run_nfs");
