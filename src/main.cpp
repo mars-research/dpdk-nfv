@@ -92,7 +92,9 @@ static_assert((BATCH_SIZE % 4 == 0) || (BATCH_SIZE == 1),
 /// Maximun number of packets per RX burst.
 /// If the `BATCH_SIZE` is one, we receive a burst of 4 but process one packet
 /// at a time.
-constexpr size_t MAX_PKT_BURST = (BATCH_SIZE == 1) ? 4 : BATCH_SIZE;
+/// constexpr size_t MAX_PKT_BURST = (BATCH_SIZE == 1) ? 4 : BATCH_SIZE;
+/// Since requirement changed at the deadline day, burst size is always 32 now.
+constexpr size_t MAX_PKT_BURST = 32;
 
 static volatile bool force_quit;
 
