@@ -36,5 +36,3 @@ do
     done
   done
 done
-
-python3 parse.py ${OUTFILE}
