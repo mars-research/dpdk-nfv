@@ -49,7 +49,7 @@ extern "C" void init_nfs(uint8_t *nfs, uint64_t len) {
 extern "C" void run_nfs(rte_ether_hdr **packets, uint64_t pkt_len) {
   const std::span<rte_ether_hdr *> packets_span(packets, pkt_len);
   for (auto &&nf : NFS) {
-    nf->process_frames(packets_span);
+    nf->process_frames(packets_span,13); //domain_m for now.
   }
 }
 

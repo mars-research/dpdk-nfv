@@ -39,7 +39,7 @@ bool Acl::matches(const Flow &flow,
 NF3Acl::NF3Acl(const std::vector<Acl> acls)
     : flow_cache_(1 << 16), acls_(acls) {}
 
-void NF3Acl::_process_frames(const std::span<rte_ether_hdr *> packets) {
+void NF3Acl::_process_frames(const std::span<rte_ether_hdr *> packets, int buffer_id) {
   for (auto &&eth_hdr : packets) {
     // Get packet header.
     const auto headers = get_packet_headers(eth_hdr);

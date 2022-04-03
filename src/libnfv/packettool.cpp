@@ -67,5 +67,5 @@ void swap_mac(rte_mbuf *m) {
 }
 
 void swap_mac(rte_ether_hdr *eth_hdr) {
-  std::swap(eth_hdr->src_addr, eth_hdr->dst_addr);
+  std::swap(eth_hdr->s_addr, eth_hdr->d_addr);
 }

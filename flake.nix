@@ -2,7 +2,9 @@
   description = "DPDK NFV tests";
 
   inputs = {
-    mars-std.url = "github:mars-research/mars-std";
+    mars-std.url = "github:mars-research/mars-std/0d999a347e53f400e771392b48128471d5b0a098";
+    mars-std.inputs.nixpkgs.follows = "nixpkgs";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-21.11";
   };
 
   outputs = { self, mars-std, ... }: let

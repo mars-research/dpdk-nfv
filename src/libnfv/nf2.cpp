@@ -13,7 +13,7 @@
 
 NF2OneWayNat::NF2OneWayNat() : port_hash_(MAX_SIZE), flow_vec_(MAX_SIZE) {}
 
-void NF2OneWayNat::_process_frames(const std::span<rte_ether_hdr *> packets) {
+void NF2OneWayNat::_process_frames(const std::span<rte_ether_hdr *> packets , int buffer_id) {
   for (auto &&eth_hdr : packets) {
     // Get packet header.
     const auto headers = get_packet_headers(eth_hdr);

@@ -16,7 +16,7 @@ extern "C" {
 
 NF4Maglev::NF4Maglev() { maglev_init(); }
 
-void NF4Maglev::_process_frames(const std::span<rte_ether_hdr *> packets) {
+void NF4Maglev::_process_frames(const std::span<rte_ether_hdr *> packets, int buffer_id) {
   for (auto &&eth_hdr : packets) {
     if (maglev_process_frame(eth_hdr)) {
       swap_mac(eth_hdr);

@@ -32,6 +32,7 @@
 #include <tuple>
 #include <unordered_set>
 #include <vector>
+#include <sys/mman.h>
 #ifdef PAPI
 #include <papi.h>
 #endif
@@ -226,10 +227,18 @@ static void print_stats(void) {
   fflush(stdout);
 }
 
+struct mbuf_buffer_holder{
+char buff[4*4096];
+}mbuf_buffer_holder;
+
 /* main processing loop */
 static void l2fwd_main_loop(void) {
   struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
+  void *pkts_burst_holder;
+  void * tmp_pkts_burst_holder[MAX_PKT_BURST];
   struct rte_ether_hdr *eth_hdrs_burst[MAX_PKT_BURST];
+  struct rte_ether_hdr eth_hdrs_burst_buffer[MAX_PKT_BURST];
+
   int sent;
   unsigned lcore_id;
   uint64_t prev_tsc, diff_tsc, cur_tsc, timer_tsc;
@@ -315,15 +324,23 @@ static void l2fwd_main_loop(void) {
       // RX
       portid = qconf->rx_port_list[i];
       nb_rx = rte_eth_rx_burst(portid, 0, pkts_burst, MAX_PKT_BURST);
+      
+      //copy the buffers into a PKRU protected region. 
+      pkts_burst_holder = mmap(NULL, sizeof(mbuf_buffer_holder) * MAX_PKT_BURST, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      tag_buffer(pkts_burst_holder,sizeof(mbuf_buffer_holder) * MAX_PKT_BURST, 13);
+      for (uint64_t i = 0; i < nb_rx; i++) {
+        tmp_pkts_burst_holder[i] = pkts_burst[i]->buf_addr;
+        std::memcpy(pkts_burst_holder + sizeof(mbuf_buffer_holder) * i, pkts_burst[i]->buf_addr, pkts_burst[i]->buf_len);
+        pkts_burst[i]->buf_addr = pkts_burst_holder + sizeof(mbuf_buffer_holder) * i;
+      }
+
       port_statistics[portid].rx += nb_rx;
       std::span<rte_mbuf *> packets(pkts_burst, nb_rx);
 
       // Get the eth headers.
       for (uint64_t i = 0; i < nb_rx; i++) {
-        eth_hdrs_burst[i] =
-            rte_pktmbuf_mtod(pkts_burst[i], struct rte_ether_hdr *);
+        eth_hdrs_burst[i] = rte_pktmbuf_mtod(pkts_burst[i], struct rte_ether_hdr *);
       }
-
       // Apply network functions.
       const auto begin = _rdtsc();
 #ifdef PAPI
@@ -331,7 +348,8 @@ static void l2fwd_main_loop(void) {
       assert(retval == PAPI_OK);
 #endif
       for (int i = 0; i < nb_rx; i += BATCH_SIZE) {
-        run_nfs(eth_hdrs_burst + i, BATCH_SIZE);
+	size_t num_in_batch = i + BATCH_SIZE <= nb_rx ? BATCH_SIZE : nb_rx - i;
+        run_nfs(eth_hdrs_burst + i, num_in_batch);
       }
 #ifdef PAPI
       retval = PAPI_hl_region_end("run_nfs");
@@ -347,6 +365,13 @@ static void l2fwd_main_loop(void) {
       // We drop the packets if tx is not able to keep up with the rate
       // assert(nb_tx == nb_rx);
       port_statistics[portid].tx += nb_tx;
+
+      //put processed packets back. ummap the memory.
+      for (uint64_t i = 0; i < nb_rx; i++) {
+        pkts_burst[i]->buf_addr = tmp_pkts_burst_holder[i];
+        std::memcpy(pkts_burst[i]->buf_addr,pkts_burst_holder + sizeof(mbuf_buffer_holder) * i, pkts_burst[i]->buf_len);
+      }
+      munmap(pkts_burst_holder,sizeof(mbuf_buffer_holder) * MAX_PKT_BURST);
     }
     if ((port_statistics[portid].tx > max_packets) ||
         (timer_period_elapsed > max_timer_period)) {
@@ -472,6 +497,7 @@ int main(int argc, char **argv) {
 
   // Initialize RT
   RT_init();
+  MPK_init();
 
   struct lcore_queue_conf *qconf;
   int ret;
@@ -493,7 +519,7 @@ int main(int argc, char **argv) {
   force_quit = false;
   signal(SIGINT, signal_handler);
   signal(SIGTERM, signal_handler);
-
+  
   /* parse application arguments (after the EAL ones) */
   absl::SetProgramUsageMessage("$PROGRAM [EAL options] -- [program options]");
   absl::ParseCommandLine(argc, argv);

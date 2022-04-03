@@ -7,10 +7,10 @@
 
 class NetworkFunction {
  private:
-  virtual void _process_frames(const std::span<rte_ether_hdr*> packets) = 0;
+  virtual void _process_frames(const std::span<rte_ether_hdr*> packets, int buffer_id) = 0;
 
  public:
-  virtual void process_frames(const std::span<rte_ether_hdr*> packets) = 0;
+  virtual void process_frames(const std::span<rte_ether_hdr*> packets, int buffer_id) = 0;
   virtual void report() {}
   virtual ~NetworkFunction() = default;
 };
