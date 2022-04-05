@@ -23,6 +23,7 @@
 
         python3
         linuxPackages.perf
+        pktgen
         (pkgs.writeScriptBin "sperf" ''
           sudo ${linuxPackages.perf}/bin/perf "$@"
         '')

@@ -26,7 +26,7 @@ class NF3Acl : public NetworkFunction {
   absl::flat_hash_set<Flow> flow_cache_;
   std::vector<Acl> acls_;
 
-  void _process_frames(const std::span<rte_ether_hdr *> packets, int buffer_id) override;
+  void _process_frames(const std::span<rte_ether_hdr *> packets, int buffer_id) __attribute__ ((section (".domain_c"))) ;;
 
  public:
   NF3Acl(const std::vector<Acl> acls);

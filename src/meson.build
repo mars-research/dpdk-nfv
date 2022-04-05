@@ -1,7 +1,7 @@
 sources += files(
   'main.cpp',
   '../user-trampoline/rt.c',
-  '../user-trampoline/dom_a/buddy.c',
+  '../user-trampoline/buddy.c',
 )
 
 subdir('libnfv')

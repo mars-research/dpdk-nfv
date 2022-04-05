@@ -114,7 +114,11 @@ foreach batch_size : ['1', '4', '8', '16', '32']
         link_with: cpp_link_with + [
             libtrampoline_no_trampoline,
         ],
-        cpp_args: cpp_args + ['-DNAME=notrampoline' + name_postfix]
+        cpp_args: cpp_args + ['-DNAME=notrampoline' + name_postfix],
+                link_args: [
+        '-T' + meson.source_root() + '/user-trampoline/ls.ld'
+        ]
+        
     )
     executable('nfv-nofxsave-' + batch_size,
         sources,
@@ -123,7 +127,10 @@ foreach batch_size : ['1', '4', '8', '16', '32']
         link_with: cpp_link_with + [
             libtrampoline_no_fxsave,
         ],
-        cpp_args: cpp_args + ['-DNAME=nofxsave' + name_postfix]
+        cpp_args: cpp_args + ['-DNAME=nofxsave' + name_postfix],
+                link_args: [
+        '-T' + meson.source_root() + '/user-trampoline/ls.ld'
+        ]
     )
     executable('nfv-fxsave-' + batch_size,
         sources,
@@ -132,13 +139,20 @@ foreach batch_size : ['1', '4', '8', '16', '32']
         link_with: cpp_link_with + [
             libtrampoline_fxsave,
         ],
-        cpp_args: cpp_args + ['-DNAME=fxsave' + name_postfix]
+        cpp_args: cpp_args + ['-DNAME=fxsave' + name_postfix],
+        link_args: [
+        '-T' + meson.source_root() + '/user-trampoline/ls.ld'
+        ]
     )
     executable('nfv-rust-' + batch_size,
         sources,
         include_directories: include_directories,
         dependencies: rust_dependencies,
         link_with: rust_nfv_lib,
-        cpp_args: cpp_args + ['-DNAME=rust' + name_postfix]
+        cpp_args: cpp_args + ['-DNAME=rust' + name_postfix],
+        link_args: [
+        '-T' + meson.source_root() + '/user-trampoline/ls.ld'
+        ]
+
     )
 endforeach

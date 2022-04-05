@@ -1,6 +1,7 @@
 # Declare sources
 libtrampoline_sources = files(
   '../../user-trampoline/rt.c',
+  '../../user-trampoline/buddy.c',
 )
 libtrampoline_inc = include_directories(
   '.',

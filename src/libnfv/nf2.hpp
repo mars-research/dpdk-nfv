@@ -18,7 +18,7 @@ class NF2OneWayNat : public NetworkFunction {
   absl::flat_hash_map<Flow, Flow, absl::Hash<Flow>> port_hash_;
   std::vector<FlowUsed> flow_vec_;
 
-  void _process_frames(const std::span<rte_ether_hdr*> packets, int buffer_id) override;
+  void _process_frames(const std::span<rte_ether_hdr*> packets, int buffer_id) __attribute__ ((section (".domain_b"))) ;
 
  public:
   NF2OneWayNat();
