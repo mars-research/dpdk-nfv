@@ -36,8 +36,8 @@ set 0 type ipv4
 set 0 proto udp
 set 0 dst ip 10.10.3.1
 set 0 src ip 10.10.3.2/24
-set 0 dst mac 90:e2:ba:b5:14:cd
-set 0 src mac 90:e2:ba:b3:74:81
+set 0 dst mac 3c:fd:fe:b4:f9:ff
+#set 0 src mac 90:e2:ba:b3:74:81
 set 0 vlan 1
 
 set 0 pattern none
@@ -136,5 +136,8 @@ rate 0 overhead 62
 #
 # Set up the sequence data for the port.
 set 0 seq_cnt 0
+
+# Set up randomization mask
+set 0 rnd 0 26 XXXXXXXXXXXXXXXXXXXX
 
 ################################ Done #################################
