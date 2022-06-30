@@ -11,3 +11,12 @@
 ```
 sudo $(which pktgen) -c fffff -- -m '[1:2].0' -f pktgen-config.txt
 ```
+
+
+## Setup DPDK
+
+```
+sudo vim /etc/default/grub
+GRUB_CMDLINE_LINUX_DEFAULT="Intel_iommu=on iommu=pt"
+sudo update-grub
+```
