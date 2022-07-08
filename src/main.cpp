@@ -326,16 +326,15 @@ static void l2fwd_main_loop(void) {
       nb_rx = rte_eth_rx_burst(portid, 0, pkts_burst, MAX_PKT_BURST);
       
       //copy the buffers into a PKRU protected region. 
-      pkts_burst_holder = mmap(NULL, sizeof(mbuf_buffer_holder) * MAX_PKT_BURST, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      tag_buffer(pkts_burst_holder,sizeof(mbuf_buffer_holder) * MAX_PKT_BURST, 13);
-      for (uint64_t i = 0; i < nb_rx; i++) {
-        tmp_pkts_burst_holder[i] = pkts_burst[i]->buf_addr;
-        std::memcpy(pkts_burst_holder + sizeof(mbuf_buffer_holder) * i, pkts_burst[i]->buf_addr, pkts_burst[i]->buf_len);
-        pkts_burst[i]->buf_addr = pkts_burst_holder + sizeof(mbuf_buffer_holder) * i;
-      }
+      // pkts_burst_holder = mmap(NULL, sizeof(mbuf_buffer_holder) * MAX_PKT_BURST, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      // tag_buffer(pkts_burst_holder,sizeof(mbuf_buffer_holder) * MAX_PKT_BURST, 13);
+      // for (uint64_t i = 0; i < nb_rx; i++) {
+      //   tmp_pkts_burst_holder[i] = pkts_burst[i]->buf_addr;
+      //   std::memcpy(pkts_burst_holder + sizeof(mbuf_buffer_holder) * i, pkts_burst[i]->buf_addr, pkts_burst[i]->buf_len);
+      //   pkts_burst[i]->buf_addr = pkts_burst_holder + sizeof(mbuf_buffer_holder) * i;
+      // }
 
       port_statistics[portid].rx += nb_rx;
-      std::span<rte_mbuf *> packets(pkts_burst, nb_rx);
 
       // Get the eth headers.
       for (uint64_t i = 0; i < nb_rx; i++) {
@@ -363,15 +362,20 @@ static void l2fwd_main_loop(void) {
       // TX
       nb_tx = rte_eth_tx_burst(portid, 0, pkts_burst, nb_rx);
       // We drop the packets if tx is not able to keep up with the rate
-      // assert(nb_tx == nb_rx);
+      if(unlikely(nb_tx < nb_rx)){
+        for(int i=0;i<MAX_PKT_BURST;i++){
+          rte_pktmbuf_free(pkts_burst[i]);
+        }
+      }
+        
       port_statistics[portid].tx += nb_tx;
 
       //put processed packets back. ummap the memory.
-      for (uint64_t i = 0; i < nb_rx; i++) {
-        pkts_burst[i]->buf_addr = tmp_pkts_burst_holder[i];
-        std::memcpy(pkts_burst[i]->buf_addr,pkts_burst_holder + sizeof(mbuf_buffer_holder) * i, pkts_burst[i]->buf_len);
-      }
-      munmap(pkts_burst_holder,sizeof(mbuf_buffer_holder) * MAX_PKT_BURST);
+      // for (uint64_t i = 0; i < nb_rx; i++) {
+      //   pkts_burst[i]->buf_addr = tmp_pkts_burst_holder[i];
+      //   std::memcpy(pkts_burst[i]->buf_addr,pkts_burst_holder + sizeof(mbuf_buffer_holder) * i, pkts_burst[i]->buf_len);
+      // }
+      // munmap(pkts_burst_holder,sizeof(mbuf_buffer_holder) * MAX_PKT_BURST);
     }
     if ((port_statistics[portid].tx > max_packets) ||
         (timer_period_elapsed > max_timer_period)) {
@@ -628,6 +632,8 @@ int main(int argc, char **argv) {
                               RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
   if (l2fwd_pktmbuf_pool == NULL)
     rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");
+
+    tag_Hugepage_buffer( l2fwd_pktmbuf_pool->mz->addr,l2fwd_pktmbuf_pool->mz->len,13);
 
   /* Initialise each port */
   RTE_ETH_FOREACH_DEV(portid) {
