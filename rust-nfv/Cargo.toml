@@ -27,3 +27,7 @@ default-features = false
 [dependencies.twox-hash]
 version = "1.5.0"
 default-features = false
+
+[features]
+# If enabled, hashbrown will be used instead of cindexmap
+use_hashbrown = []
