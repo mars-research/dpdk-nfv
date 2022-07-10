@@ -59,8 +59,8 @@
 #include <rte_random.h>
 #include <rte_string_fns.h>
 
-#include "nfv.hpp"
 extern "C" {
+  #include "nfv.h"
 #include "../user-trampoline/rt.h"
 }
 
@@ -221,7 +221,7 @@ static void print_stats(void) {
          total_packets_tx, total_packets_rx, total_packets_dropped);
   printf("\n====================================================\n");
   printf("\nNetwork function status ===============================\n");
-  report_nfs();
+  //report_nfs();
   printf("====================================================\n");
 
   fflush(stdout);
@@ -231,13 +231,14 @@ struct mbuf_buffer_holder{
 char buff[4*4096];
 }mbuf_buffer_holder;
 
+  struct rte_ether_hdr *eth_hdrs_burst[MAX_PKT_BURST] __attribute__ ((section (".domain_M")));
+  struct rte_ether_hdr eth_hdrs_burst_buffer[MAX_PKT_BURST] __attribute__ ((section (".domain_M")));;
 /* main processing loop */
 static void l2fwd_main_loop(void) {
   struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
   void *pkts_burst_holder;
   void * tmp_pkts_burst_holder[MAX_PKT_BURST];
-  struct rte_ether_hdr *eth_hdrs_burst[MAX_PKT_BURST];
-  struct rte_ether_hdr eth_hdrs_burst_buffer[MAX_PKT_BURST];
+
 
   int sent;
   unsigned lcore_id;
@@ -272,7 +273,7 @@ static void l2fwd_main_loop(void) {
                  std::back_insert_iterator(network_functions),
                  [](const auto &str) { return std::stoi(str); });
   init_nfs(network_functions.data(), network_functions.size());
-
+  //init_nfs();
   RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
 
   for (i = 0; i < qconf->n_rx_port; i++) {
@@ -631,7 +632,10 @@ int main(int argc, char **argv) {
       rte_pktmbuf_pool_create("mbuf_pool", nb_mbufs, MEMPOOL_CACHE_SIZE, 0,
                               RTE_MBUF_DEFAULT_BUF_SIZE, rte_socket_id());
   if (l2fwd_pktmbuf_pool == NULL)
-    rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");
+  {
+        rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");
+  }
+
 
     tag_Hugepage_buffer( l2fwd_pktmbuf_pool->mz->addr,l2fwd_pktmbuf_pool->mz->len,13);
 
@@ -780,9 +784,9 @@ int main(int argc, char **argv) {
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-  printf("throughput, %s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE,
+  printf("throughput, %s, %u, %lu\n", TOSTRING(NAME), BATCH_SIZE,
          last_throughput);
-  printf("latency, %s, %lu, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_latency);
+  printf("latency, %s, %u, %lu\n", TOSTRING(NAME), BATCH_SIZE, last_latency);
 
   return ret;
 }

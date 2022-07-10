@@ -47,25 +47,25 @@ size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int
       // Create a new outgoing flow.
       struct Flow outgoing_flow = {.src_ip = ipv4_hdr->src_addr,
          .dst_ip = ipv4_hdr->dst_addr,
-         .src_port = udp_hdr->src_port,
+         .src_port = assigned_port,
          .dst_port = udp_hdr->dst_port,
          .proto = eth_hdr->ether_type};
-      outgoing_flow.src_port = assigned_port;
+      //outgoing_flow.src_port = assigned_port;
 
       // Update flow mapping.
       maglev_hashmap_insert(&flow, &outgoing_flow);
 
-      struct Flow outgoing_flow_r = {.src_ip = ipv4_hdr->dst_addr,
-         .dst_ip = ipv4_hdr->src_addr,
-         .src_port = udp_hdr->dst_port,
-         .dst_port = udp_hdr->src_port,
-         .proto = eth_hdr->ether_type};
+      struct Flow outgoing_flow_r = {.src_ip = outgoing_flow_r.dst_ip,
+         .dst_ip = outgoing_flow_r.src_ip,
+         .src_port = outgoing_flow_r.dst_port,
+         .dst_port = outgoing_flow_r.src_port,
+         .proto = outgoing_flow_r.proto};
 
-      struct Flow flow_r = {.src_ip = ipv4_hdr->dst_addr,
-         .dst_ip = ipv4_hdr->src_addr,
-         .src_port = udp_hdr->dst_port,
-         .dst_port = udp_hdr->src_port,
-         .proto = eth_hdr->ether_type};
+      struct Flow flow_r = {.src_ip = flow_r.dst_ip,
+         .dst_ip = flow_r.src_ip,
+         .src_port = flow_r.dst_port,
+         .dst_port = flow_r.src_port,
+         .proto = flow_r.proto};
       maglev_hashmap_insert(&outgoing_flow_r, &flow_r);
 
       // Stamp the pack with the outgoing flow.

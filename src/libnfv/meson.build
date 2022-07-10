@@ -1,11 +1,6 @@
 # Declare sources
 libnfv_sources = files(
-  'packettool.cpp',
-  'nfv.cpp',
-  'nf1.cpp',
-  'nf2.cpp',
-  'nf3.cpp',
-  'nf4.cpp',
+  'nfv.c',
 )
 libnfv_inc = include_directories('./.')
 

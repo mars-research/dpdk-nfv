@@ -19,7 +19,8 @@ endif
 
 # Construct compiler arguments.
 no_trampoline_asm_args = []
-no_fxsave_asm_args = no_trampoline_asm_args + ['-DUSE_TRAMPOLINE', '-DUSE_REGWIPE']
+no_fxsave_asm_args = no_trampoline_asm_args + ['-DUSE_TRAMPOLINE', '-DUSE_REGWIPE', 
+'-DUSE_ATOMIC', '-DUSE_PASSING_BUFFER', '-DUSE_WRPKRU','-DUSE_CHECK_CALLER','-DUSE_CHECK_RAX']
 fxsave_asm_args = no_fxsave_asm_args + ['-DUSE_SIMD']
 
 # Configure compiler.

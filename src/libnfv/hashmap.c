@@ -50,17 +50,17 @@ void maglev_hashmap_insert(struct Flow* key,
 				struct Flow* value)
 {
 	//uint64_t hash = hash_fn(key);
-	uint64_t hash = fnv_1((char*)key, sizeof(key));
+	uint64_t hash = fnv_1((char*)key, sizeof(struct Flow));
 	for (uint64_t i = 0; i < CAPACITY; ++i) {
 		uint64_t probe = hash + i;
 		struct maglev_kv_pair* pair = &map.pairs[probe % CAPACITY];
-		if (cmp_flow(&pair->key,key) || pair->vaild == false) {
+		if (pair->vaild == false || cmp_flow(&pair->key,key)) {
 			copy_flow(key,&pair->key);
 			if (value != NULL){
 				copy_flow(value,&pair->value);
 			}
 
-			pair->vaild == true;
+			pair->vaild = true;
 			break;
 		}
 	}
@@ -69,7 +69,7 @@ void maglev_hashmap_insert(struct Flow* key,
 struct maglev_kv_pair* maglev_hashmap_get(struct Flow* key)
 {
 	//uint64_t hash = hash_fn(key);
-	uint64_t hash = fnv_1((char*)key, sizeof(key));
+	uint64_t hash = fnv_1((char*)key, sizeof(struct Flow));
 	for (uint64_t i = 0; i < CAPACITY; ++i) {
 		uint64_t probe = hash + i;
 		struct maglev_kv_pair *pair = &map.pairs[probe % CAPACITY];
