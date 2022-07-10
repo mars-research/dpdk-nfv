@@ -1,7 +1,7 @@
 use crate::packet::{Flow, Packet};
 
+#[cfg(feature = "use_hashbrown")]
 use core::hash::BuildHasherDefault;
-use hashbrown::HashMap;
 
 #[derive(Clone, Copy, Default)]
 struct FlowUsed {
@@ -13,22 +13,35 @@ struct FlowUsed {
 const MIN_PORT: u16 = 1024;
 const MAX_PORT: u16 = 65535;
 
-// type Hasher = BuildHasherDefault<fnv::FnvHasher>;
-type Hasher = BuildHasherDefault<wyhash::WyHash>;
+#[cfg(feature = "use_hashbrown")]
+type Hasher = BuildHasherDefault<fnv::FnvHasher>;
+// type Hasher = BuildHasherDefault<wyhash::WyHash>;
+
+#[cfg(feature = "use_hashbrown")]
+type FlowHashMap = hashbrown::HashMap<Flow, Flow, Hasher>;
+
+#[cfg(not(feature = "use_hashbrown"))]
+type FlowHashMap = sashstore_redleaf::cindexmap::CIndex<Flow, Flow>;
 
 pub struct Nf2OneWayNat {
-    port_hash: HashMap<Flow, Flow, Hasher>,
+    port_hash: FlowHashMap,
     flow_vec: Vec<FlowUsed>,
     next_port: u16,
 }
 
 impl Nf2OneWayNat {
     pub fn new() -> Self {
+        #[cfg(feature = "use_hashbrown")]
+        let port_hash = FlowHashMap::with_capacity_and_hasher(
+            65536,
+            Default::default(),
+        );
+
+        #[cfg(not(feature = "use_hashbrown"))]
+        let port_hash = FlowHashMap::with_capacity(65536);
+
         Self {
-            port_hash: HashMap::<Flow, Flow, Hasher>::with_capacity_and_hasher(
-                65536,
-                Default::default(),
-            ),
+            port_hash,
             flow_vec: (0..65535).map(|_| Default::default()).collect(),
             next_port: MIN_PORT,
         }

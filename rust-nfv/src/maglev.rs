@@ -27,10 +27,15 @@ use core::default::Default;
 
 use fnv::FnvHasher;
 use twox_hash::XxHash;
-use hashbrown::HashMap;
-use wyhash::WyHash;
+//use wyhash::WyHash;
 
 // type Hasher1 = BuildHasherDefault<wyhash::WyHash>;
+
+#[cfg(feature = "use_hashbrown")]
+type MaglevHashMap = hashbrown::HashMap<usize, usize>;
+
+#[cfg(not(feature = "use_hashbrown"))]
+type MaglevHashMap = sashstore_redleaf::cindexmap::CIndex<usize, usize>;
 
 // For Maglev, we use a really stripped-down version of Indexmap
 // use sashstore_redleaf::cindexmap::CIndex;
@@ -58,7 +63,7 @@ type Hasher2 = BuildHasherDefault<XxHash>;
 pub struct Maglev<N> {
     pub nodes: Vec<N>,
     pub lookup: Vec<i8>,
-    pub cache: RefCell<HashMap<usize, usize>>,
+    pub cache: RefCell<MaglevHashMap>,
 }
 
 impl<N: Hash + Eq> Maglev<N> {
@@ -66,7 +71,11 @@ impl<N: Hash + Eq> Maglev<N> {
     pub fn new<I: IntoIterator<Item = N>>(nodes: I) -> Self {
         let nodes = nodes.into_iter().collect::<Vec<_>>();
         let lookup = Self::populate(&nodes);
-        let cache = RefCell::new(HashMap::with_capacity_and_hasher(CACHE_SIZE, Default::default()));
+        #[cfg(feature = "use_hashbrown")]
+        let hashmap = MaglevHashMap::with_capacity_and_hasher(CACHE_SIZE, Default::default());
+        #[cfg(not(feature = "use_hashbrown"))]
+        let hashmap = MaglevHashMap::with_capacity(CACHE_SIZE);
+        let cache = RefCell::new(hashmap);
 
         Maglev {
             nodes,
@@ -168,31 +177,23 @@ impl<N: Hash + Eq> Maglev<N> {
     #[inline]
     pub fn get_index_from_hash(&self, hash: usize) -> usize {
         let mut cache = self.cache.borrow_mut();
-        let mut set_cache = false;
-        let x = match cache.get(&hash) {
+        match cache.get(&hash) {
             Some(idx) => {
                 // Use cached backend
                 unsafe {
                     HIT_COUNT += 1;
+                    HASHMAP_TOTAL += 1;
                 }
-                *idx
+
+                idx
             }
             None => {
                 // Use lookup directly
-                set_cache = true;
-                self.lookup[hash % self.lookup.len()] as usize
+                let x = self.lookup[hash % self.lookup.len()] as usize;
+                cache.insert(hash, x);
+                x
             }
-        };
-        unsafe {
-            HASHMAP_TOTAL += 1;
         }
-
-        if set_cache {
-            //println!("inserting ");
-            cache.insert(hash, x);
-        }
-
-        x
     }
 
     #[inline]
