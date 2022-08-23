@@ -12,7 +12,10 @@ void run_nfs(struct rte_ether_hdr **packets, uint64_t pkt_len) {
     nf3(packets,pkt_len,0,13);
     nf4(packets,pkt_len,0,13);
 }
-
+extern Buddy_Allocator *buddy_a;
+extern Buddy_Allocator *buddy_b;
+extern Buddy_Allocator *buddy_c;
+extern Buddy_Allocator *buddy_d;
 void* alloc_1(size_t request ){
 return buddy_alloc( request,buddy_a);
 }

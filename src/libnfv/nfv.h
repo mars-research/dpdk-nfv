@@ -15,8 +15,3 @@ size_t (nf4)(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer_i
 
 void run_nfs(struct rte_ether_hdr **packets, uint64_t pkt_len);
 void init_nfs(void* not_used_pointer,size_t not_used_int);
-
-extern Buddy_Allocator *buddy_a;
-extern Buddy_Allocator *buddy_b;
-extern Buddy_Allocator *buddy_c;
-extern Buddy_Allocator *buddy_d;
