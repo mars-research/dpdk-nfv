@@ -19,7 +19,7 @@ typedef int Node;
 typedef int8_t LookUpTable[TABLE_SIZE];
 
 // MAGLEV: Connection tracking table
-struct maglev_kv_pair maglev_kv_pairs[CAPACITY]__attribute__ ((aligned (4096)));
+struct maglev_kv_pair maglev_kv_pairs[1];
 static struct maglev_hashmap map = {.pairs = maglev_kv_pairs};
 
 // MAGLEV: Lookup table
@@ -59,35 +59,35 @@ void swap_mac(struct rte_ether_hdr *eth_hdr) {
     eth_hdr->dst_addr.addr_bytes[i]= tmp;
   }
 }
-
+int packets = 0;
 __inline__ uint64_t flowhash(void *frame, size_t len) {
-	static int packets = 0;
+
 	// Warning: This implementation returns 0 for invalid inputs
 	char *f = (char*)frame;
 
 	if ((len > 0) && (packets < 256)) {
 		//packets++;
-		//printf("len %d\n", len);
+		////printf("len %d\n", len);
 		//hexdump(f, len);
 	}
 	// Fail early
 	if (f[ETH_HEADER_LEN] >> 4 != 4) {
         // This shitty implementation can only handle IPv4 :(
-		printf("unhandled! not ipv4?\n");
+		//printf("unhandled! not ipv4?\n");
 		return 0;
 	}
 
 	char proto = f[ETH_HEADER_LEN + IPV4_PROTO_OFFSET];
 	if (proto != 6 && proto != 17) {
         // This shitty implementation can only handle TCP and UDP
-		printf("Unhandled proto %x\n", proto);
+		//printf("Unhandled proto %x\n", proto);
 		return 0;
 	}
 
 	size_t v4len = 4 * (f[ETH_HEADER_LEN] & 0b1111);
 	if (len < (ETH_HEADER_LEN + v4len + 4)) {
 		// Not long enough
-		//printf("header len short len %d expected %d\n", len, (ETH_HEADER_LEN + v4len + 4));
+		////printf("header len short len %d expected %d\n", len, (ETH_HEADER_LEN + v4len + 4));
 		//hexdump(f, 64);
 		return 0;
 	}

@@ -7,7 +7,7 @@
 #include <rte_udp.h>
 
 
-struct Flow {
+typedef struct Flow {
   rte_be32_t src_ip;
   rte_be32_t dst_ip;
   rte_be16_t src_port;

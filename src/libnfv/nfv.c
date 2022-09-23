@@ -7,15 +7,10 @@ size_t (*_nf4)(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer
 void (*nf4_init)();
 
 void run_nfs(struct rte_ether_hdr **packets, uint64_t pkt_len) {
-
     nf1(packets,pkt_len,0,13);
-
     nf2(packets,pkt_len,0,13);
-
     nf3(packets,pkt_len,0,13);
-
     nf4(packets,pkt_len,0,13);
-
 }
 
 
@@ -23,7 +18,7 @@ void Load_nf1(){
 	extern int CURRENT_DOM;
     extern int pkey_a;
     CURRENT_DOM = 1;
-  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf1.so", pkey_a);
+  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf1.so", 1);
  	 _nf1 = find_symbol(elf_a, "process_frames");
 	 CURRENT_DOM = 0;
  }
@@ -31,7 +26,7 @@ void Load_nf1(){
 	extern int CURRENT_DOM;
     extern int pkey_b;
     CURRENT_DOM = 2;
-  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf2.so", pkey_b);
+  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf2.so", 2);
  	 _nf2 = find_symbol(elf_a, "process_frames");
 	 CURRENT_DOM = 0;
  }
@@ -39,7 +34,7 @@ void Load_nf1(){
 	extern int CURRENT_DOM;
     extern int pkey_c;
     CURRENT_DOM = 3;
-  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf3.so", pkey_c);
+  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf3.so", 3);
  	 _nf3 = find_symbol(elf_a, "process_frames");
 	 CURRENT_DOM = 0;
  }
@@ -47,7 +42,7 @@ void Load_nf1(){
 	extern int CURRENT_DOM;
     extern int pkey_d;
     CURRENT_DOM = 4;
-  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf4.so", pkey_d);
+  	struct elf_domain * elf_a = load_elf_domain("src/libnfv/nf4.so", 4);
  	 _nf4 = find_symbol(elf_a, "process_frames");
 	 nf4_init = find_symbol(elf_a, "maglev_init");
 	 nf4_init();

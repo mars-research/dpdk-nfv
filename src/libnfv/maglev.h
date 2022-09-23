@@ -27,5 +27,5 @@ void maglev_init(void);
 // Maglev process frame
 int64_t maglev_process_frame(struct rte_ether_hdr *frame);
 
-
+void swap_mac(struct rte_ether_hdr *eth_hdr);
 #endif /* _MAGLEV_DPDK_H_ */
