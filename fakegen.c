@@ -6,6 +6,8 @@
 
 #define MTU 1500
 #define CPU_FREQ 3800000000
+	
+size_t batch_size = 1;
 
 static const char PACKET_TEMPLATE[] = {
 	0x3c, 0xfd, 0xfe, 0xb4, 0xf9, 0xff, 0x3c, 0xfd, 0xfe, 0xb4, 0xfb, 0xdc, 0x08, 0x00, 0x45, 0x00,
@@ -17,15 +19,19 @@ static const char PACKET_TEMPLATE[] = {
 uint64_t clock_gettime_latency = 0;
 uint64_t fake_delay = 4800;
 
+long int counter;
+
 /// Receive packets from the synthetic generator.
-size_t receive_packets(void *buf, size_t batch_size) {
+size_t receive_packets(void *buf, size_t batch_size,void **buf_ptr) {
 	for (size_t i = 0; i < batch_size; ++i) {
 		char * pkt = (char*)buf + i * MTU;
+		buf_ptr[i] = pkt;
 		memcpy(pkt, PACKET_TEMPLATE, sizeof(PACKET_TEMPLATE));
-		pkt[10] = 123;
-	}
+		pkt[26] = counter%(1<<20);
+		counter++;
 	for (size_t i = 0; i < fake_delay; ++i) {
 		asm volatile("nop");
+	}
 	}
 	return batch_size;
 }
@@ -59,9 +65,9 @@ void calibrate_clock_gettime_latency() {
 /// Runs the receive loop.
 void run_receive_loop() {
 	size_t iterations = 10000000;
-	size_t batch_size = 32;
 
 	void *packets = malloc(MTU * batch_size);
+	void *packets_ptr[batch_size];
 
 	struct timespec start_ts, end_ts;
 
@@ -69,7 +75,8 @@ void run_receive_loop() {
 	uint64_t start = rdtsc();
 
 	for (size_t i = 0; i < iterations; ++i) {
-		receive_packets(packets, batch_size);
+		receive_packets(packets, batch_size,packets_ptr);
+
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &end_ts);
