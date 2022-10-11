@@ -19,20 +19,10 @@ pub struct Acl {
 
 impl Acl {
     pub fn matches(&self, flow: &Flow, connections: &HashSet<Flow, Hasher>) -> bool {
-        if (self.src_ip.is_none() || self.src_ip.unwrap() == (flow.src_ip))
+        (self.src_ip.is_none() || self.src_ip.unwrap() == (flow.src_ip))
             && (self.dst_ip.is_none() || self.dst_ip.unwrap() == (flow.dst_ip))
             && (self.src_port.is_none() || flow.src_port == self.src_port.unwrap())
             && (self.dst_port.is_none() || flow.dst_port == self.dst_port.unwrap())
-        {
-            if let Some(established) = self.established {
-                let rev_flow = flow.reverse_flow();
-                (connections.contains(flow) || connections.contains(&rev_flow)) == established
-            } else {
-                true
-            }
-        } else {
-            false
-        }
     }
 }
 
@@ -55,12 +45,21 @@ impl crate::nfv::NetworkFunction for Nf3Acl {
         for pkt in packets.iter_mut() {
             let flow = pkt.get_flow();
 
+            let mut matched = false;
             for acl in &self.acls {
                 if acl.matches(&flow, &self.flow_cache) {
+                    matched = true;
                     if !acl.drop {
                         self.flow_cache.insert(flow);
                     }
-                    //return !acl.drop;
+                }
+            }
+
+            if !matched {
+                let reverse_flow = flow.reverse_flow();
+                if self.flow_cache.contains(&flow) {
+                    matched = true;
+                    std::hint::black_box(matched);
                 }
             }
         }

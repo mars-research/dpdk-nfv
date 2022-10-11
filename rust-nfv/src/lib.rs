@@ -1,4 +1,5 @@
 #![feature(box_syntax)]
+#![feature(bench_black_box)]
 
 mod maglev;
 mod nf1;
