@@ -62,10 +62,11 @@ std::optional<std::tuple<rte_ipv4_hdr *, rte_udp_hdr *>> get_packet_headers(
 }
 
 void swap_mac(rte_mbuf *m) {
-  rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
+  rte_ether_hdr *eth_hdr = (rte_ether_hdr*)m->buf_addr;
+  // rte_ether_hdr *eth_hdr = rte_pktmbuf_mtod(m, struct rte_ether_hdr *);
   swap_mac(eth_hdr);
 }
 
 void swap_mac(rte_ether_hdr *eth_hdr) {
-  std::swap(eth_hdr->src_addr, eth_hdr->dst_addr);
+  std::swap(eth_hdr->s_addr, eth_hdr->d_addr);
 }

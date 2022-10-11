@@ -50,40 +50,27 @@
       "inputs": {
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1648508634,
-        "narHash": "sha256-05FK6sjtxZVo9dr5mrHpMLujQMcp/pZ5a4j7IQ+VlCY=",
+        "lastModified": 1635305838,
+        "narHash": "sha256-t4vrTfZuCIjryDHCTdv5ObbwQvV7YwGY+fvNFAMBUgo=",
         "owner": "mars-research",
         "repo": "mars-std",
-        "rev": "9b8ec035eecb4f9c7cee12b2dad4979f1653fec3",
+        "rev": "0d999a347e53f400e771392b48128471d5b0a098",
         "type": "github"
       },
       "original": {
         "owner": "mars-research",
         "repo": "mars-std",
+        "rev": "0d999a347e53f400e771392b48128471d5b0a098",
         "type": "github"
       }
     },
     "nixpkgs": {
-      "locked": {
-        "lastModified": 1648390671,
-        "narHash": "sha256-u69opCeHUx3CsdIerD0wVSR+DjfDQjnztObqfk9Trqc=",
-        "owner": "mars-research",
-        "repo": "nixpkgs",
-        "rev": "ce8cbe3c01fd8ee2de526ccd84bbf9b82397a510",
-        "type": "github"
-      },
-      "original": {
-        "owner": "mars-research",
-        "ref": "mars-22.05-2022032800",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs_2": {
       "locked": {
         "lastModified": 1637453606,
         "narHash": "sha256-Gy6cwUswft9xqsjWxFYEnx/63/qzaFUwatcbV5GF/GQ=",
@@ -99,15 +86,32 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1656782578,
+        "narHash": "sha256-1eMCBEqJplPotTo/SZ/t5HU6Sf2I8qKlZi9MX7jv9fw=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "573603b7fdb9feb0eb8efc16ee18a015c667ab1b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-21.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "mars-std": "mars-std"
+        "mars-std": "mars-std",
+        "nixpkgs": "nixpkgs_2"
       }
     },
     "rust-overlay": {
       "inputs": {
         "flake-utils": "flake-utils_2",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs"
       },
       "locked": {
         "lastModified": 1648348179,
