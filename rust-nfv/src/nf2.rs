@@ -13,7 +13,7 @@ struct FlowUsed {
 const MIN_PORT: u16 = 1024;
 const MAX_PORT: u16 = 65535;
 
-const TABLE_SIZE: usize = 1 << 21;
+const TABLE_SIZE: usize = (1 << 20) * 16;
 
 #[cfg(feature = "use_hashbrown")]
 type Hasher = BuildHasherDefault<fnv::FnvHasher>;

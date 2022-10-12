@@ -41,7 +41,7 @@ type MaglevHashMap = sashstore_redleaf::cindexmap::CIndex<usize, usize>;
 // use sashstore_redleaf::cindexmap::CIndex;
 
 const TABLE_SIZE: usize = 65537;
-const CACHE_SIZE: usize = 1 << 21;
+const CACHE_SIZE: usize = (1 << 20) * 16;
 
 static mut HIT_COUNT: usize = 0;
 static mut HASHMAP_TOTAL: usize = 0;
