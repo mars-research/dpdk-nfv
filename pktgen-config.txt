@@ -138,6 +138,8 @@ rate 0 overhead 62
 set 0 seq_cnt 0
 
 # Set up randomization mask
-set 0 rnd 0 26 XXXXXXXXXXXXXXXXXXXX
+#set 0 rnd 0 26 XXXXXXXXXXXXXXXXXXXX
+# starts at 26, but let's use 28 as the offset so it's 32-bit aligned
+set 0 rnd 0 28  XXXXXXXXXXXXXXXXXXXX............
 
 ################################ Done #################################
