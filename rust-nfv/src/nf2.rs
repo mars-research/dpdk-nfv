@@ -13,6 +13,8 @@ struct FlowUsed {
 const MIN_PORT: u16 = 1024;
 const MAX_PORT: u16 = 65535;
 
+const TABLE_SIZE: usize = 1 << 21;
+
 #[cfg(feature = "use_hashbrown")]
 type Hasher = BuildHasherDefault<fnv::FnvHasher>;
 // type Hasher = BuildHasherDefault<wyhash::WyHash>;
@@ -33,12 +35,12 @@ impl Nf2OneWayNat {
     pub fn new() -> Self {
         #[cfg(feature = "use_hashbrown")]
         let port_hash = FlowHashMap::with_capacity_and_hasher(
-            65536,
+            TABLE_SIZE,
             Default::default(),
         );
 
         #[cfg(not(feature = "use_hashbrown"))]
-        let port_hash = FlowHashMap::with_capacity(65536);
+        let port_hash = FlowHashMap::with_capacity(TABLE_SIZE);
 
         Self {
             port_hash,
