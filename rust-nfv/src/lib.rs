@@ -1,5 +1,6 @@
 #![feature(box_syntax)]
 #![feature(bench_black_box)]
+#![deny(unreachable_patterns)]
 
 mod maglev;
 mod nf1;
@@ -20,16 +21,16 @@ static mut PACKETS: Vec<Packet> = vec![];
 static mut NFS: Vec<Box<dyn nfv::NetworkFunction>> = vec![];
 
 #[no_mangle]
-pub unsafe extern "C" fn init_nfs(nfs: *const u8, len: u64) {
+pub unsafe extern "C" fn init_nfs_rust(nfs: *const u8, len: u64) {
     let len = len as usize;
     PACKETS.reserve(MAX_PKT_BURST);
 
     for nf in std::slice::from_raw_parts(nfs, len) {
         NFS.push(match nf {
             1 => box nf1::Nf1DecrementTtl::new(),
-            2 => box nf2::Nf2OneWayNat::new(),
+            2 => box nf2::Nf2Nat::new(),
             3 => box nf3::Nf3Acl::new(vec![nf3::Acl {
-                src_ip: Some(0),
+                src_ip: None,
                 dst_ip: None,
                 src_port: None,
                 dst_port: None,
@@ -52,7 +53,7 @@ pub unsafe extern "C" fn init_nfs(nfs: *const u8, len: u64) {
 // NF4 = 14M
 
 #[no_mangle]
-pub unsafe extern "C" fn run_nfs(packets: *const *mut u8, num_pkt: u64) {
+pub unsafe extern "C" fn run_nfs_rust(packets: *const *mut u8, num_pkt: u64) {
     PACKETS.drain(..);
     for packet in std::slice::from_raw_parts(packets, num_pkt as usize) {
         let mut packet = std::slice::from_raw_parts_mut(*packet, MAX_PKT_LEN);

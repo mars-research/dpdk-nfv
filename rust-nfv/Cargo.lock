@@ -9,12 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8fd72866655d1904d6b0997d0b07ba561047d070fbe29de039031c641b61217"
 
 [[package]]
-name = "arrayvec"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
-
-[[package]]
 name = "autocfg"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -25,12 +19,6 @@ name = "b2histogram"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4bc3421af11761afa13950268aa670cc75fc6c2668fabf789e8e4dba5d0c9137"
-
-[[package]]
-name = "bitfield"
-version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46afbd2983a5d5a7bd740ccb198caf5b82f45c40c09c0eed36052d91cb92e719"
 
 [[package]]
 name = "byteorder"
@@ -45,17 +33,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
-name = "cfg-if"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "console"
+name = "cleanstore"
 version = "0.1.0"
 dependencies = [
- "libsyscalls",
- "spin 0.5.3",
+ "b2histogram",
 ]
 
 [[package]]
@@ -74,51 +55,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lazy_static"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
-dependencies = [
- "spin 0.5.2",
-]
-
-[[package]]
-name = "libsyscalls"
-version = "0.1.0"
-dependencies = [
- "pc-keyboard",
- "platform",
- "spin 0.5.3",
- "syscalls",
-]
-
-[[package]]
-name = "log"
-version = "0.4.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
-dependencies = [
- "cfg-if 1.0.0",
-]
-
-[[package]]
-name = "pc-keyboard"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fff50ab09ba31bcebc0669f4e64c0952fae1acdca9e6e0587e68e4e8443808ac"
-
-[[package]]
-name = "platform"
-version = "0.1.0"
-
-[[package]]
-name = "protocol"
-version = "0.1.0"
-dependencies = [
- "bitfield",
-]
-
-[[package]]
 name = "rand_core"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -130,36 +66,12 @@ version = "0.1.0"
 dependencies = [
  "b2histogram",
  "byteorder",
+ "cleanstore",
  "fnv",
  "hashbrown",
- "sashstore-redleaf",
  "twox-hash",
  "wyhash",
 ]
-
-[[package]]
-name = "sashstore-redleaf"
-version = "0.1.0"
-dependencies = [
- "arrayvec",
- "b2histogram",
- "console",
- "fnv",
- "lazy_static",
- "libsyscalls",
- "log",
- "syscalls",
-]
-
-[[package]]
-name = "spin"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
-
-[[package]]
-name = "spin"
-version = "0.5.3"
 
 [[package]]
 name = "static_assertions"
@@ -168,22 +80,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
-name = "syscalls"
-version = "0.1.0"
-dependencies = [
- "pc-keyboard",
- "platform",
- "protocol",
- "spin 0.5.3",
-]
-
-[[package]]
 name = "twox-hash"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04f8ab788026715fa63b31960869617cba39117e520eb415b0139543e325ab59"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if",
  "static_assertions",
 ]
 

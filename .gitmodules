@@ -1,9 +1,9 @@
 [submodule "user-trampoline"]
 	path = user-trampoline
 	url = git@github.com:mars-research/user-trampoline.git
-[submodule "rust-nfv/redleaf-nfv"]
-	path = rust-nfv/redleaf-nfv
-	url = git@github.com:mars-research/redleaf-nfv.git
 [submodule "FlameGraph"]
 	path = FlameGraph
 	url = https://github.com/brendangregg/FlameGraph.git
+[submodule "rust-nfv/kv-bench"]
+	path = rust-nfv/kv-bench
+	url = git@github.com:mars-research/kv-bench

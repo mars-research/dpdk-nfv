@@ -1,84 +1,75 @@
 use crate::packet::{Flow, Packet};
 
-#[cfg(feature = "use_hashbrown")]
-use core::hash::BuildHasherDefault;
-
-#[derive(Clone, Copy, Default)]
-struct FlowUsed {
-    pub flow: Flow,
-    pub time: u64,
-    pub used: bool,
-}
-
 const MIN_PORT: u16 = 1024;
 const MAX_PORT: u16 = 65535;
 
 const TABLE_SIZE: usize = (1 << 20) * 16;
 
-#[cfg(feature = "use_hashbrown")]
-type Hasher = BuildHasherDefault<fnv::FnvHasher>;
-// type Hasher = BuildHasherDefault<wyhash::WyHash>;
+static mut PACKET_IDX: usize = 0;
 
-#[cfg(feature = "use_hashbrown")]
-type FlowHashMap = hashbrown::HashMap<Flow, Flow, Hasher>;
+type FlowHashMap = cleanstore::cindexmap::CIndex;
 
-#[cfg(not(feature = "use_hashbrown"))]
-type FlowHashMap = sashstore_redleaf::cindexmap::CIndex<Flow, Flow>;
-
-pub struct Nf2OneWayNat {
+pub struct Nf2Nat {
     port_hash: FlowHashMap,
-    flow_vec: Vec<FlowUsed>,
+    flow_vec: [Flow; 65536],
     next_port: u16,
 }
 
-impl Nf2OneWayNat {
+impl Nf2Nat {
     pub fn new() -> Self {
-        #[cfg(feature = "use_hashbrown")]
-        let port_hash = FlowHashMap::with_capacity_and_hasher(
-            TABLE_SIZE,
-            Default::default(),
-        );
-
-        #[cfg(not(feature = "use_hashbrown"))]
         let port_hash = FlowHashMap::with_capacity(TABLE_SIZE);
 
         Self {
             port_hash,
-            flow_vec: (0..65535).map(|_| Default::default()).collect(),
+            flow_vec: [Default::default(); 65536],
             next_port: MIN_PORT,
         }
     }
 }
 
-impl crate::nfv::NetworkFunction for Nf2OneWayNat {
+impl crate::nfv::NetworkFunction for Nf2Nat {
     fn process_frames(&mut self, packets: &mut [Packet]) {
         for pkt in packets.iter_mut() {
-            // From netbricks
-            let flow = pkt.get_flow();
-
-            match self.port_hash.get(&flow) {
-                Some(s) => {
-                    pkt.set_flow(&s);
+            // not a complete/correct implementation of the NAT, but has similar
+            // overheads
+            let flowhash = pkt.get_flowhash();
+            /* For debugging
+            let flowhash;
+            unsafe {
+                flowhash = PACKET_IDX;
+                PACKET_IDX += 1;
+                if PACKET_IDX >= (1 << 20) {
+                    PACKET_IDX = 0;
                 }
-                None => {
+            }
+            */
+
+            match self.port_hash.get(flowhash) {
+                (0, 0) => {
+                    // new outgoing flow
                     if self.next_port < MAX_PORT {
-                        let assigned_port = self.next_port; //FIXME.
+                        let assigned_port = self.next_port;
                         self.next_port += 1;
-                        self.flow_vec[assigned_port as usize] = FlowUsed {
-                            flow,
-                            time: 0,
-                            used: true,
-                        };
-                        let mut outgoing_flow = flow.clone();
-                        //outgoing_flow.src_ip = ip;
-                        outgoing_flow.src_port = assigned_port;
-                        let rev_flow = outgoing_flow.reverse_flow();
 
-                        self.port_hash.insert(flow, outgoing_flow);
-                        self.port_hash.insert(rev_flow, flow.reverse_flow());
+                        let mut reverse_flow = pkt.get_flow().reverse_flow();
+                        reverse_flow.dst_port = assigned_port;
+                        let reverse_flowhash = reverse_flow.get_flowhash();
+                        self.flow_vec[assigned_port as usize] = reverse_flow;
 
-                        pkt.set_flow(&outgoing_flow);
+                        pkt.set_src_port(assigned_port);
+
+                        self.port_hash.insert(flowhash, assigned_port as usize);
+                        self.port_hash.insert(reverse_flowhash, 0);
                     }
+                }
+                (_flowhash, 0) => {
+                    // reply packet with assigned port - stamp with reverse flow in flow_vec
+                    let rev_flow = self.flow_vec[pkt.get_dst_port() as usize];
+                    pkt.set_flow(&rev_flow);
+                }
+                (_flowhash, port) => {
+                    // outgoing packet with assigned port - just change source port
+                    pkt.set_src_port(port as u16);
                 }
             };
         }
