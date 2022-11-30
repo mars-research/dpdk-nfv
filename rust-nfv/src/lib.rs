@@ -21,7 +21,7 @@ static mut PACKETS: Vec<Packet> = vec![];
 static mut NFS: Vec<Box<dyn nfv::NetworkFunction>> = vec![];
 
 #[no_mangle]
-pub unsafe extern "C" fn init_nfs_rust(nfs: *const u8, len: u64) {
+pub unsafe extern "C" fn init_nfs(nfs: *const u8, len: u64) {
     let len = len as usize;
     PACKETS.reserve(MAX_PKT_BURST);
 
@@ -53,7 +53,7 @@ pub unsafe extern "C" fn init_nfs_rust(nfs: *const u8, len: u64) {
 // NF4 = 14M
 
 #[no_mangle]
-pub unsafe extern "C" fn run_nfs_rust(packets: *const *mut u8, num_pkt: u64) {
+pub unsafe extern "C" fn run_nfs(packets: *const *mut u8, num_pkt: u64) {
     PACKETS.drain(..);
     for packet in std::slice::from_raw_parts(packets, num_pkt as usize) {
         let mut packet = std::slice::from_raw_parts_mut(*packet, MAX_PKT_LEN);
