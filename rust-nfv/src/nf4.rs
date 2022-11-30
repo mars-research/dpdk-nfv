@@ -21,8 +21,8 @@ impl crate::nfv::NetworkFunction for Nf4Maglev {
                 Some(self.maglev.get_index_from_hash(hash))
             };
 
-            if backend.is_some() {
-                pkt.swap_mac();
+            if let Some(backend) = backend {
+                pkt.frame[5] = backend as u8;
             };
         }
     }
