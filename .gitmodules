@@ -7,3 +7,6 @@
 [submodule "FlameGraph"]
 	path = FlameGraph
 	url = https://github.com/brendangregg/FlameGraph.git
+[submodule "llvm-SFI"]
+	path = llvm-SFI
+	url = git@github.com:mars-research/llvm-SFI.git

@@ -8,8 +8,10 @@ size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int
     // Get packet header.
     struct rte_ether_hdr *eth_hdr = packets[i];
     int64_t backend = maglev_process_frame(eth_hdr);
+    //asm("int3");
     if (backend) {
       eth_hdr->dst_addr.addr_bytes[5] = (char)backend;
     }
   }
+  return 0;
 }

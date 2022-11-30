@@ -13,7 +13,7 @@ struct Flow {
   rte_be16_t src_port;
   rte_be16_t dst_port;
   rte_be16_t proto;
-}Flow;
+};
 
 struct rte_ipv4_hdr *get_ipv4_hdr(const struct rte_ether_hdr *eth_hdr);
 

@@ -637,7 +637,6 @@ int main(int argc, char **argv) {
   }
 
 
-    tag_Hugepage_buffer( l2fwd_pktmbuf_pool->mz->addr,l2fwd_pktmbuf_pool->mz->len,13);
 
   /* Initialise each port */
   RTE_ETH_FOREACH_DEV(portid) {
