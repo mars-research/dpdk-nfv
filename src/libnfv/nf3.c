@@ -92,5 +92,6 @@ size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int
     if (!matched) {
       // TODO: we drop the packet here
     }
+    asm volatile("" : "+r"(matched));
   }
 }

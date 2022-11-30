@@ -184,7 +184,7 @@ struct maglev_kv_pair* maglev_hashmap_get( uint64_t key)
 
 int64_t maglev_process_frame(struct rte_ether_hdr *frame) {
 	int64_t backend = -1;
-	uint64_t hash = flowhash((void*)frame, sizeof(struct rte_ether_hdr));
+	uint64_t hash = flowhash((void*)frame, 1500);
 	if (hash != 0) {
 		struct maglev_kv_pair *cached = maglev_hashmap_get(hash);
 		if (cached == NULL) {

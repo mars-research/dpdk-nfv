@@ -8,6 +8,8 @@ const static size_t MAX_SIZE = 1 << 16;
 const static uint16_t MIN_PORT = 1024;
 const static uint16_t MAX_PORT = 65535;
 
+// static uint32_t PACKET_IDX = 0;
+
 uint16_t next_port_ = MIN_PORT;
 
 
@@ -20,6 +22,7 @@ size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int
     struct rte_udp_hdr *udp_hdr = get_packet_rte_udp_hdr(eth_hdr);
 
     if (ipv4_hdr == NULL || udp_hdr == NULL ){
+      abort();
       return 0;
     }
 
@@ -29,9 +32,22 @@ size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int
          .src_port = udp_hdr->src_port,
          .dst_port = udp_hdr->dst_port,
          .proto = eth_hdr->ether_type};
+    /* For debugging
+    struct Flow flow = {.src_ip = PACKET_IDX,
+         .dst_ip = 0,
+         .src_port = 0,
+         .dst_port = 0,
+         .proto = 0};
+
+    PACKET_IDX++;
+    if (PACKET_IDX > (1ULL << 20)) {
+        PACKET_IDX = 0;
+    }
+    */
 
     // Check if the flow is already NATed.
     struct maglev_kv_pair * pair = maglev_hashmap_get(&flow);
+    asm volatile("" : "+r"(pair));
     if (pair != NULL) {
       // Stamp the pack with the outgoing flow.
       struct Flow * outgoing_flow = &pair->value;
