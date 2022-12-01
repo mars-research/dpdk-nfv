@@ -1,5 +1,7 @@
 use crate::packet::{Flow, Packet};
 
+const TABLE_SIZE: usize = (1 << 20) * 16;
+
 type FlowHashSet = cleanstore::cindexmap::CIndex;
 
 // From netbricks
@@ -30,7 +32,7 @@ pub struct Nf3Acl {
 
 impl Nf3Acl {
     pub fn new(acls: Vec<Acl>) -> Self {
-        let flow_cache = FlowHashSet::new();
+        let flow_cache = FlowHashSet::with_capacity(TABLE_SIZE);
 
         Self {
             flow_cache,
