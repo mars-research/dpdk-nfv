@@ -13,7 +13,7 @@ const static uint16_t MAX_PORT = 65535;
 uint16_t next_port_ = MIN_PORT;
 
 
-size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer_id){
+size_t process_frames2(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer_id){
   for (int i = 0; i < nb_rx; i++) {
     // Get packet header.
     struct rte_ether_hdr *eth_hdr = packets[i];

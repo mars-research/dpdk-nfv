@@ -39,7 +39,7 @@ bool matches(struct Acl * this, struct Flow *flow){
     dst_port_matched;
 }
 
-size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer_id){
+size_t process_frames3(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer_id){
   for (int i = 0; i < nb_rx; i++) {
     // Get packet header.
     struct rte_ether_hdr *eth_hdr = packets[i];

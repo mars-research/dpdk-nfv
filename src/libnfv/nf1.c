@@ -10,7 +10,7 @@ struct rte_ipv4_hdr *get_ipv4_hdr(const struct rte_ether_hdr *eth_hdr) {
                                  sizeof(struct rte_ether_hdr));
 }
 
-size_t process_frames(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer_id){
+size_t process_frames1(struct rte_ether_hdr** packets,int nb_rx, int not_used,int buffer_id){
     for (int i = 0; i < nb_rx; i++){
         struct rte_ipv4_hdr* ipv4_hdr = get_ipv4_hdr(packets[i]);
     if (ipv4_hdr == NULL) {
