@@ -35,16 +35,18 @@ use twox_hash::XxHash;
 type MaglevHashMap = hashbrown::HashMap<usize, usize>;
 
 #[cfg(not(feature = "use_hashbrown"))]
-type MaglevHashMap = sashstore_redleaf::cindexmap::CIndex<usize, usize>;
+type MaglevHashMap = cleanstore::cindexmap::CIndex;
 
 // For Maglev, we use a really stripped-down version of Indexmap
-// use sashstore_redleaf::cindexmap::CIndex;
+// use cleanstore::cindexmap::CIndex;
 
 const TABLE_SIZE: usize = 65537;
 const CACHE_SIZE: usize = (1 << 20) * 16;
 
 static mut HIT_COUNT: usize = 0;
 static mut HASHMAP_TOTAL: usize = 0;
+
+// static mut PACKET_INDEX: usize = 0;
 
 /*
 lut (consistent hashing), cache (connection tracking)
@@ -170,6 +172,15 @@ impl<N: Hash + Eq> Maglev<N> {
         let mut h1 = h1f.build_hasher();
         key.hash(&mut h1);
         let hash = h1.finish() as usize;
+        /* For debugging
+        unsafe {
+            hash = PACKET_INDEX;
+            PACKET_INDEX += 1;
+            if PACKET_INDEX >= (1 << 20) {
+                PACKET_INDEX = 0;
+            }
+        }
+        */
 
         self.get_index_from_hash(hash)
     }
@@ -177,21 +188,23 @@ impl<N: Hash + Eq> Maglev<N> {
     #[inline]
     pub fn get_index_from_hash(&self, hash: usize) -> usize {
         let mut cache = self.cache.borrow_mut();
-        match cache.get(&hash) {
-            Some(idx) => {
-                // Use cached backend
-                unsafe {
-                    HIT_COUNT += 1;
-                    HASHMAP_TOTAL += 1;
-                }
-
-                idx
-            }
-            None => {
+        match cache.get(hash) {
+            (0, 0) => {
                 // Use lookup directly
                 let x = self.lookup[hash % self.lookup.len()] as usize;
                 cache.insert(hash, x);
                 x
+            }
+            (_, idx) => {
+                // Use cached backend
+                /*
+                unsafe {
+                    HIT_COUNT += 1;
+                    HASHMAP_TOTAL += 1;
+                }
+                */
+
+                idx
             }
         }
     }
@@ -208,6 +221,6 @@ impl<N: Hash + Eq> Maglev<N> {
         unsafe {
             println!("Hits: {}, total: {}", HIT_COUNT, HASHMAP_TOTAL);
         }
-        //sashstore_redleaf::indexmap::print_stats();
+        //cleanstore::indexmap::print_stats();
     }
 }

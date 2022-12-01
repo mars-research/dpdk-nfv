@@ -1,4 +1,5 @@
 use core::hash::{Hash, Hasher};
+use core::convert::TryInto;
 
 use byteorder::{BigEndian, ByteOrder};
 
@@ -12,13 +13,17 @@ pub const IPV4_LENGTH_OFFSET: usize = 2;
 pub const IPV4_CHECKSUM_OFFSET: usize = 10;
 pub const IPV4_SRCDST_OFFSET: usize = 12;
 pub const IPV4_SRCDST_LEN: usize = 8;
+pub const IPV4_SRC_OFFSET: usize = 12;
+pub const IPV4_SRC_LEN: usize = 4;
+pub const IPV4_DST_OFFSET: usize = 16;
+pub const IPV4_DST_LEN: usize = 4;
 
 pub const UDP_LENGTH_OFFSET: usize = 4;
 pub const UDP_CHECKSUM_OFFSET: usize = 6;
 pub const IHL_TO_BYTE_FACTOR: usize = 4; // IHL is in terms of number of 32-bit words.
 
 pub struct Packet {
-    frame: &'static mut [u8],
+    pub frame: &'static mut [u8],
     dirty: bool,
 }
 
@@ -146,12 +151,28 @@ impl Packet {
         }
     }
 
+    pub const fn get_v4len(&self) -> usize {
+        (self.frame[ETH_HEADER_LEN] & 0b1111) as usize * 4
+    }
+
+    pub fn set_src_port(&mut self, port: u16) {
+        let v4len = self.get_v4len();
+        let mut src_port_slice = &mut self.frame[(ETH_HEADER_LEN + v4len)..(ETH_HEADER_LEN + v4len + 2)];
+        src_port_slice.copy_from_slice(&port.to_be_bytes());
+    }
+
+    pub fn get_dst_port(&mut self) -> u16{
+        let v4len = self.get_v4len();
+        let dst_port_slice = &self.frame[(ETH_HEADER_LEN + v4len + 2)..(ETH_HEADER_LEN + v4len + 4)];
+        u16::from_be_bytes(dst_port_slice.try_into().unwrap())
+    }
+
     pub fn get_flowhash(&self) -> usize {
         // Ugly but fast (supposedly)
         let mut state: u64 = 0xcbf29ce4_8422_2325;
 
         // Length of IPv4 header
-        let v4len = (self.frame[ETH_HEADER_LEN] & 0b1111) as usize * 4;
+        let v4len = self.get_v4len();
 
         // Hash source/destination IP addresses
         fnv_a(
@@ -168,6 +189,44 @@ impl Packet {
         // Hash source/destination port
         fnv_a(
             &self.frame[(ETH_HEADER_LEN + v4len)..(ETH_HEADER_LEN + v4len + 4)],
+            &mut state,
+        );
+
+        state as usize
+    }
+
+    pub fn get_reverse_flowhash(&self) -> usize {
+        // Ugly but fast (supposedly)
+        let mut state: u64 = 0xcbf29ce4_8422_2325;
+
+        // Length of IPv4 header
+        let v4len = (self.frame[ETH_HEADER_LEN] & 0b1111) as usize * 4;
+
+        // Hash destination IP addresses
+        fnv_a(
+            &self.frame[(ETH_HEADER_LEN + IPV4_DST_OFFSET)
+                ..(ETH_HEADER_LEN + IPV4_DST_OFFSET + IPV4_DST_LEN)],
+            &mut state,
+        );
+        // Hash source IP addresses
+        fnv_a(
+            &self.frame[(ETH_HEADER_LEN + IPV4_SRC_OFFSET)
+                ..(ETH_HEADER_LEN + IPV4_SRC_OFFSET + IPV4_SRC_LEN)],
+            &mut state,
+        );
+
+        // Hash IP protocol number
+        let proto = self.frame[ETH_HEADER_LEN + IPV4_PROTO_OFFSET];
+        state = state.wrapping_mul(0x100000001b3);
+        state ^= u64::from(proto);
+
+        // Hash source/destination port
+        fnv_a(
+            &self.frame[(ETH_HEADER_LEN + v4len + 2)..(ETH_HEADER_LEN + v4len + 4)],
+            &mut state,
+        );
+        fnv_a(
+            &self.frame[(ETH_HEADER_LEN + v4len)..(ETH_HEADER_LEN + v4len + 2)],
             &mut state,
         );
 
@@ -306,6 +365,25 @@ impl Flow {
             dst_port: self.src_port,
             proto: self.proto,
         }
+    }
+
+    pub fn get_flowhash(&self) -> usize {
+        // Ugly but fast (supposedly)
+        let mut state: u64 = 0xcbf29ce4_8422_2325;
+
+        // Hash source/destination IP addresses
+        fnv_a(&self.src_ip.to_be_bytes(), &mut state);
+        fnv_a(&self.dst_ip.to_be_bytes(), &mut state);
+
+        // Hash IP protocol number
+        state = state.wrapping_mul(0x100000001b3);
+        state ^= u64::from(self.proto);
+
+        // Hash source/destination port
+        fnv_a(&self.src_port.to_be_bytes(), &mut state);
+        fnv_a(&self.dst_port.to_be_bytes(), &mut state);
+
+        state as usize
     }
 }
 

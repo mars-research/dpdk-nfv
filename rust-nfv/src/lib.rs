@@ -1,5 +1,6 @@
 #![feature(box_syntax)]
 #![feature(bench_black_box)]
+#![deny(unreachable_patterns)]
 
 mod maglev;
 mod nf1;
@@ -27,9 +28,9 @@ pub unsafe extern "C" fn init_nfs(nfs: *const u8, len: u64) {
     for nf in std::slice::from_raw_parts(nfs, len) {
         NFS.push(match nf {
             1 => box nf1::Nf1DecrementTtl::new(),
-            2 => box nf2::Nf2OneWayNat::new(),
+            2 => box nf2::Nf2Nat::new(),
             3 => box nf3::Nf3Acl::new(vec![nf3::Acl {
-                src_ip: Some(0),
+                src_ip: None,
                 dst_ip: None,
                 src_port: None,
                 dst_port: None,
