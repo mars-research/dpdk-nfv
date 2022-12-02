@@ -2,9 +2,6 @@
 #define _MAGLEV_DPDK_H_
 
 #include "packettool.h"
-#include <rte_ether.h>
-#include <rte_ip.h>
-#include <rte_udp.h>
 #include "maglev.h"
 #define CAPACITY ((1ULL << 20) * 16)
 
@@ -22,10 +19,10 @@ struct maglev_hashmap {
 };
 
 // Maglev Init
-void maglev_init(void);
+static void maglev_init(void);
 
 // Maglev process frame
-int64_t maglev_process_frame(struct rte_ether_hdr *frame);
+static int64_t maglev_process_frame(struct rte_ether_hdr *frame);
 
 
 #endif /* _MAGLEV_DPDK_H_ */
