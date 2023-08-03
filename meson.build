@@ -81,7 +81,8 @@ dependencies = [
     cpp.find_library('pthread'),
     cpp.find_library('dl'),
     dependency('libdpdk'),
-    dependency('absl_flags', default_options: ['werror=false', 'warning_level=1', 'debug=true']),
+    dependency('absl_base', default_options: ['werror=false', 'warning_level=1', 'debug=true', 'cpp_std=gnu++20']),
+    dependency('absl_flags'),
 ]
 if get_option('papi')
     dependencies += [dependency('papi')]
