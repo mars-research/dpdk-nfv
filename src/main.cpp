@@ -345,6 +345,11 @@ static void l2fwd_main_loop(void) {
 
       // TX
       nb_tx = rte_eth_tx_burst(portid, 0, pkts_burst, nb_rx);
+      if(unlikely(nb_tx < nb_rx)){
+        for (int i = 0; i < nb_rx - nb_tx; i++) {
+          rte_pktmbuf_free(pkts_burst[nb_tx + i]);
+        }
+      }
       // We drop the packets if tx is not able to keep up with the rate
       // assert(nb_tx == nb_rx);
       port_statistics[portid].tx += nb_tx;
