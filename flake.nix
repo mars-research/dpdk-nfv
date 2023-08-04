@@ -3,9 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/8afc4e543663ca0a6a4f496262cd05233737e732";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     mars-std = {
       url = "github:mars-research/mars-std";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.rust-overlay.follows = "rust-overlay";
     };
   };
 
@@ -16,7 +18,7 @@
   in {
     devShell = pkgs.mkShell {
       nativeBuildInputs = with pkgs; [
-        rust-bin.nightly."2021-07-26".complete
+        rust-bin.nightly."2023-01-01".complete
         meson
         ninja
         nasm
@@ -28,6 +30,8 @@
         (pkgs.writeScriptBin "sperf" ''
           sudo ${linuxPackages.perf}/bin/perf "$@"
         '')
+
+        gdb
       ];
 
       buildInputs = with pkgs; [
