@@ -19,11 +19,17 @@ const MAX_PKT_BURST: usize = 32;
 const MAX_PKT_LEN: usize = 1514;
 static mut PACKETS: Vec<Packet> = vec![];
 static mut NFS: Vec<Box<dyn nfv::NetworkFunction>> = vec![];
+static mut PACKET_OWNERS: Vec<Box<usize>> = vec![];
 
 #[no_mangle]
 pub unsafe extern "C" fn init_nfs(nfs: *const u8, len: u64) {
     let len = len as usize;
     PACKETS.reserve(MAX_PKT_BURST);
+
+    // MAX_PKT_BURST + 1
+    for _ in 0..=MAX_PKT_BURST {
+        PACKET_OWNERS.push(Box::new(0));
+    }
 
     for nf in std::slice::from_raw_parts(nfs, len) {
         NFS.push(match nf {
@@ -64,10 +70,26 @@ pub unsafe extern "C" fn run_nfs(packets: *const *mut u8, num_pkt: u64) {
     }
 
     for nf in &mut NFS {
+        simulate_rref_overhead(&PACKETS[..]);
         nf.process_frames(&mut PACKETS[..]);
+        simulate_rref_overhead(&PACKETS[..]);
     }
 }
 
-
 #[no_mangle]
 pub unsafe extern "C" fn report_nfs() {}
+
+#[inline(always)]
+fn simulate_rref_overhead(packets: &[Packet]) {
+    unsafe {
+        // Top-level RRef
+        let ptr = &mut *PACKET_OWNERS[packets.len()] as *mut usize;
+        core::ptr::write_volatile(ptr, packets.len());
+
+        // Child RRefs
+        for i in 0usize..packets.len() {
+            let ptr = &mut *PACKET_OWNERS[i] as *mut usize;
+            core::ptr::write_volatile(ptr, i);
+        }
+    }
+}
